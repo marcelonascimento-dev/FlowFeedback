@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:uranium="http://schemas.enisn-projects.io/dotnet/maui/uraniumui"
+             xmlns:material="http://schemas.enisn-projects.io/dotnet/maui/uraniumui/material"
+             x:Class="FlowFeedback.Device.MainPage"
+             Title="Avaliação de Atendimento">
+
+    <Grid RowDefinitions="Auto, *">
+        <Label Text="Como foi o seu atendimento?" 
+               FontSize="32" FontAttributes="Bold" 
+               HorizontalOptions="Center" Margin="0,20"/>
+
+        <CollectionView Grid.Row="1" ItemsSource="{Binding Alvos}" Margin="20">
+            <CollectionView.ItemsLayout>
+                <GridItemsLayout Orientation="Vertical" Span="2" />
+            </CollectionView.ItemsLayout>
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <uranium:StatefulContentView TappedCommand="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.AbrirVotacaoCommand}"
+                                                CommandParameter="{Binding .}">
+                        <material:Card Margin="10" Padding="20">
+                            <VerticalStackLayout Spacing="10" HorizontalOptions="Center">
+                                <Image Source="user_placeholder.png" HeightRequest="120" WidthRequest="120" />
+                                <Label Text="{Binding Titulo}" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center"/>
+                                <Label Text="{Binding Subtitulo}" FontSize="14" Color="Gray" HorizontalOptions="Center"/>
+                            </VerticalStackLayout>
+                        </material:Card>
+                    </uranium:StatefulContentView>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>
