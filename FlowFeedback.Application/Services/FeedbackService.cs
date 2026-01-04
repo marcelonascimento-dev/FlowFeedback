@@ -20,28 +20,21 @@ public class FeedbackService : IFeedbackService
 
     public async Task ProcessarVotosDoTabletAsync(Guid tenantId, Guid deviceId, List<RegistrarVotoDto> votosDto)
     {
-        var dispositivo = await _context.Dispositivos
-            .AsNoTracking()
+        var dispositivo = await _context.Dispositivos.AsNoTracking()
             .FirstOrDefaultAsync(d => d.Id == deviceId && d.TenantId == tenantId);
 
         if (dispositivo == null)
-            throw new Exception("Dispositivo não encontrado ou inválido para o tenant informado.");
+            throw new InvalidOperationException("Dispositivo não encontrado ou inválido para o tenant informado.");
 
-        var entidades = new List<Voto>();
-
-        foreach (var dto in votosDto)
-        {
-            var voto = new Voto(
-                tenantId,
-                dispositivo.UnidadeId,
-                deviceId,
-                dto.AlvoAvaliacaoId,
-                dto.Nota,
-                dto.DataHora,
-                dto.TagMotivo
-            );
-            entidades.Add(voto);
-        }
+        var entidades = votosDto.Select(dto => new Voto(
+            tenantId,
+            dispositivo.UnidadeId,
+            deviceId,
+            dto.AlvoAvaliacaoId,
+            dto.Nota,
+            dto.DataHora,
+            dto.TagMotivo
+        )).ToList();
 
         await _votoRepository.AdicionarLoteAsync(entidades);
     }
