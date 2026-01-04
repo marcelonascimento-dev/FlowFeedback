@@ -18,4 +18,7 @@ public class Dispositivo
         NomeLocal = nomeLocal;
         Ativo = true;
     }
+
+    public void Desativar() => Ativo = false;
+    public void Ativar() => Ativo = true;
 }

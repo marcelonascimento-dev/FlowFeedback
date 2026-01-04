@@ -16,10 +16,10 @@ public class SyncController : ControllerBase
     }
 
     [HttpPost("votos")]
-    public async Task<IActionResult> ReceberVotos([FromBody] PacoteVotosDto pacote)
+    public async Task<IActionResult> SincronizarVotos([FromBody] PacoteVotosDto pacote)
     {
-        if (pacote.Votos == null || !pacote.Votos.Any())
-            return BadRequest("O pacote de votos está vazio.");
+        if (pacote == null || pacote.Votos == null || !pacote.Votos.Any())
+            return BadRequest("Pacote de votos inválido ou vazio.");
 
         await _feedbackService.ProcessarVotosDoTabletAsync(
             pacote.TenantId,
@@ -27,6 +27,6 @@ public class SyncController : ControllerBase
             pacote.Votos
         );
 
-        return Ok(new { mensagem = "Votos sincronizados com sucesso", qtd = pacote.Votos.Count });
+        return Ok(new { mensagem = "Sincronização concluída com sucesso", total = pacote.Votos.Count });
     }
 }

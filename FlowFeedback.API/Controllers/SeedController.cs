@@ -21,31 +21,35 @@ public class SeedController : ControllerBase
     public async Task<IActionResult> GerarDados()
     {
         _context.Votos.RemoveRange(await _context.Votos.ToListAsync());
+        _context.AlvosAvaliacao.RemoveRange(await _context.AlvosAvaliacao.ToListAsync());
         _context.Dispositivos.RemoveRange(await _context.Dispositivos.ToListAsync());
         _context.Unidades.RemoveRange(await _context.Unidades.ToListAsync());
-        _context.AlvosAvaliacao.RemoveRange(await _context.AlvosAvaliacao.ToListAsync());
+        _context.Tenants.RemoveRange(await _context.Tenants.ToListAsync());
 
         await _context.SaveChangesAsync();
 
-        var tenantId = Guid.NewGuid();
+        var tenant = new Tenant("Grupo Max Supermercados", "12.345.678/0001-99");
+        await _context.Tenants.AddAsync(tenant);
+        await _context.SaveChangesAsync();
 
-        var unidadeCentro = new Unidade(tenantId, "Max Supermercado - Centro", "LJ-001");
-        var unidadeShopping = new Unidade(tenantId, "Max Supermercado - Shopping", "LJ-002");
+        var unidadeCentro = new Unidade(tenant.Id, "Max - Loja Centro", "Goiânia", "Rua 10, 123");
+        var unidadeShopping = new Unidade(tenant.Id, "Max - Loja Shopping", "Goiânia", "Av. T-63, S/N");
 
         await _context.Unidades.AddRangeAsync(unidadeCentro, unidadeShopping);
         await _context.SaveChangesAsync();
 
-        var deviceAcougueCentro = new Dispositivo(Guid.NewGuid(), tenantId, unidadeCentro.Id, "Totem Açougue");
-        var deviceCaixaShopping = new Dispositivo(Guid.NewGuid(), tenantId, unidadeShopping.Id, "Totem Saída");
+        var deviceAcougue = new Dispositivo(Guid.NewGuid(), tenant.Id, unidadeCentro.Id, "Totem Açougue");
+        var deviceCheckin = new Dispositivo(Guid.NewGuid(), tenant.Id, unidadeShopping.Id, "Totem Entrada");
 
-        await _context.Dispositivos.AddRangeAsync(deviceAcougueCentro, deviceCaixaShopping);
+        await _context.Dispositivos.AddRangeAsync(deviceAcougue, deviceCheckin);
 
         var alvos = new List<AlvoAvaliacao>
         {
-            new AlvoAvaliacao(tenantId, "João Silva", "Açougueiro", "https://i.pravatar.cc/300?img=11", TipoAlvo.Pessoa, 1),
-            new AlvoAvaliacao(tenantId, "Maria Oliveira", "Atendente", "https://i.pravatar.cc/300?img=5", TipoAlvo.Pessoa, 2),
-            new AlvoAvaliacao(tenantId, "Limpeza Geral", "Como está o ambiente?", "https://cdn-icons-png.flaticon.com/512/2059/2059806.png", TipoAlvo.Ambiente, 3),
-            new AlvoAvaliacao(tenantId, "Tempo de Fila", "Foi rápido?", "https://cdn-icons-png.flaticon.com/512/3063/3063069.png", TipoAlvo.Servico, 4)
+            new AlvoAvaliacao(unidadeCentro.Id, "João Silva", "Açougueiro", "https://i.pravatar.cc/300?img=11", TipoAlvo.Pessoa, 1),
+            new AlvoAvaliacao(unidadeCentro.Id, "Limpeza Açougue", "Organização", null, TipoAlvo.Ambiente, 2),
+
+            new AlvoAvaliacao(unidadeShopping.Id, "Atendimento Geral", "Cordialidade", null, TipoAlvo.Servico, 1),
+            new AlvoAvaliacao(unidadeShopping.Id, "Maria Oliveira", "Recepcionista", "https://i.pravatar.cc/300?img=5", TipoAlvo.Pessoa, 2)
         };
 
         await _context.AlvosAvaliacao.AddRangeAsync(alvos);
@@ -53,17 +57,11 @@ public class SeedController : ControllerBase
 
         return Ok(new
         {
-            mensagem = "Dados de hierarquia gerados",
-            tenantId,
-            unidades = new
-            {
-                centro = new { id = unidadeCentro.Id, nome = unidadeCentro.Nome },
-                shopping = new { id = unidadeShopping.Id, nome = unidadeShopping.Nome }
-            },
-            dispositivos = new
-            {
-                acougueCentro = deviceAcougueCentro.Id,
-                saidaShopping = deviceCaixaShopping.Id
+            mensagem = "Estrutura complexa gerada com sucesso!",
+            tenantId = tenant.Id,
+            dispositivos = new[] {
+                new { nome = deviceAcougue.NomeLocal, id = deviceAcougue.Id },
+                new { nome = deviceCheckin.NomeLocal, id = deviceCheckin.Id }
             }
         });
     }

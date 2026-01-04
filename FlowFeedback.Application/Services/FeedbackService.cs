@@ -7,19 +7,25 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FlowFeedback.Application.Services;
 
-public class FeedbackService(IVotoRepository votoRepository, AppDbContext context) : IFeedbackService
+public class FeedbackService : IFeedbackService
 {
+    private readonly IVotoRepository _votoRepository;
+    private readonly AppDbContext _context;
+
+    public FeedbackService(IVotoRepository votoRepository, AppDbContext context)
+    {
+        _votoRepository = votoRepository;
+        _context = context;
+    }
 
     public async Task ProcessarVotosDoTabletAsync(Guid tenantId, Guid deviceId, List<RegistrarVotoDto> votosDto)
     {
-        var dispositivo = await context.Dispositivos
+        var dispositivo = await _context.Dispositivos
             .AsNoTracking()
             .FirstOrDefaultAsync(d => d.Id == deviceId && d.TenantId == tenantId);
 
         if (dispositivo == null)
-        {
-            return;
-        }
+            throw new Exception("Dispositivo não encontrado ou inválido para o tenant informado.");
 
         var entidades = new List<Voto>();
 
@@ -37,6 +43,6 @@ public class FeedbackService(IVotoRepository votoRepository, AppDbContext contex
             entidades.Add(voto);
         }
 
-        await votoRepository.AdicionarLoteAsync(entidades);
+        await _votoRepository.AdicionarLoteAsync(entidades);
     }
 }

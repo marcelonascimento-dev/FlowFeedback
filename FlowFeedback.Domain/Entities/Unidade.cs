@@ -4,18 +4,20 @@ public class Unidade
 {
     public Guid Id { get; private set; }
     public Guid TenantId { get; private set; }
-    public string Nome { get; private set; }
-    public string CodigoExterno { get; private set; } // Ex: "LJ-01" (Integração ERP)
+    public string NomeLoja { get; private set; }
+    public string Cidade { get; private set; }
+    public string Endereco { get; private set; }
     public bool Ativa { get; private set; }
 
     protected Unidade() { }
 
-    public Unidade(Guid tenantId, string nome, string codigoExterno)
+    public Unidade(Guid tenantId, string nomeLoja, string cidade, string endereco)
     {
         Id = Guid.NewGuid();
         TenantId = tenantId;
-        Nome = nome;
-        CodigoExterno = codigoExterno;
+        NomeLoja = nomeLoja;
+        Cidade = cidade;
+        Endereco = endereco;
         Ativa = true;
     }
 }
