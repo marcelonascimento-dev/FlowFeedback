@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FlowFeedback.Domain\FlowFeedback.Domain.csproj" />
+	<ProjectReference Include="..\FlowFeedback.Infrastructure\FlowFeedback.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
