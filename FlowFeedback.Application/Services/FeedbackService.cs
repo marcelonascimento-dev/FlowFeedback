@@ -20,7 +20,7 @@ public class FeedbackService : IFeedbackService
 
         foreach (var dto in votosDto)
         {
-            var voto = new Voto(tenantId, deviceId, dto.FuncionarioId, dto.Nota, dto.DataHora);
+            var voto = new Voto(tenantId, deviceId, dto.AlvoAvaliacaoId, dto.Nota, dto.DataHora);
             entidades.Add(voto);
         }
 
