@@ -1,32 +1,116 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:uranium="http://schemas.enisn-projects.io/dotnet/maui/uraniumui"
-             xmlns:material="http://schemas.enisn-projects.io/dotnet/maui/uraniumui/material"
+             xmlns:viewmodel="clr-namespace:FlowFeedback.Device.ViewModels"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:Class="FlowFeedback.Device.MainPage"
-             Title="Avaliação de Atendimento">
+             BackgroundColor="#F5F6F8"
+             Shell.NavBarIsVisible="False">
 
     <Grid RowDefinitions="Auto, *">
-        <Label Text="Como foi o seu atendimento?" 
-               FontSize="32" FontAttributes="Bold" 
-               HorizontalOptions="Center" Margin="0,20"/>
 
-        <CollectionView Grid.Row="1" ItemsSource="{Binding Alvos}" Margin="20">
+        <Border Grid.Row="0" 
+                Padding="0" 
+                StrokeThickness="0"
+                HeightRequest="180">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="0,0,40,40" />
+            </Border.StrokeShape>
+
+            <Grid>
+                <Grid.Background>
+                    <LinearGradientBrush EndPoint="0,1">
+                        <GradientStop Color="{StaticResource Primary}" Offset="0.1" />
+                        <GradientStop Color="{StaticResource PrimaryDark}" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Grid.Background>
+
+                <VerticalStackLayout VerticalOptions="Center" Spacing="10">
+                    <Image Source="dotnet_bot.png" 
+                           HeightRequest="60" 
+                           HorizontalOptions="Center" />
+
+                    <Label Text="QUAL A SUA OPINIÃO?" 
+                           TextColor="White" 
+                           FontSize="24" 
+                           FontAttributes="Bold" 
+                           HorizontalOptions="Center" />
+
+                    <Label Text="Sua satisfação nos ajuda a crescer" 
+                           TextColor="White" 
+                           FontSize="14" 
+                           HorizontalOptions="Center" 
+                           Opacity="0.8" />
+                </VerticalStackLayout>
+            </Grid>
+        </Border>
+
+        <CollectionView Grid.Row="1" 
+                        ItemsSource="{Binding Alvos}" 
+                        Margin="20"
+                        SelectionMode="None">
+
             <CollectionView.ItemsLayout>
-                <GridItemsLayout Orientation="Vertical" Span="2" />
+                <GridItemsLayout Orientation="Vertical" 
+                                 Span="2" 
+                                 HorizontalItemSpacing="20" 
+                                 VerticalItemSpacing="20" />
             </CollectionView.ItemsLayout>
+
             <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <uranium:StatefulContentView TappedCommand="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.AbrirVotacaoCommand}"
-                                                CommandParameter="{Binding .}">
-                        <material:Card Margin="10" Padding="20">
-                            <VerticalStackLayout Spacing="10" HorizontalOptions="Center">
-                                <Image Source="user_placeholder.png" HeightRequest="120" WidthRequest="120" />
-                                <Label Text="{Binding Titulo}" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center"/>
-                                <Label Text="{Binding Subtitulo}" FontSize="14" Color="Gray" HorizontalOptions="Center"/>
+                <DataTemplate x:DataType="viewmodel:AlvoDto">
+                    <Border StrokeThickness="0"
+                            BackgroundColor="White"
+                            HeightRequest="280">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="25" />
+                        </Border.StrokeShape>
+
+                        <Border.Shadow>
+                            <Shadow Brush="Black" Offset="0,8" Radius="12" Opacity="0.1" />
+                        </Border.Shadow>
+
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodel:MainViewModel}}, Path=AbrirVotacaoCommand}"
+                                                  CommandParameter="{Binding .}" />
+                        </Border.GestureRecognizers>
+
+                        <Grid RowDefinitions="*, Auto">
+                            <VerticalStackLayout Grid.Row="0" Padding="20" Spacing="12">
+
+                                <Border StrokeShape="RoundRectangle 50" 
+                                        HeightRequest="100" WidthRequest="100" 
+                                        HorizontalOptions="Center" 
+                                        BackgroundColor="#F0F2F5"
+                                        StrokeThickness="0">
+                                    <Image Source="{Binding ImagemUrl, TargetNullValue='dotnet_bot.png'}" 
+                                           Aspect="AspectFill" />
+                                </Border>
+
+                                <Label Text="{Binding Titulo}" 
+                                       FontSize="20" 
+                                       FontAttributes="Bold" 
+                                       HorizontalTextAlignment="Center" 
+                                       TextColor="#2C3E50"/>
+
+                                <Label Text="{Binding Subtitulo}" 
+                                       FontSize="14" 
+                                       TextColor="#7F8C8D" 
+                                       HorizontalTextAlignment="Center" />
                             </VerticalStackLayout>
-                        </material:Card>
-                    </uranium:StatefulContentView>
+
+                            <Border Grid.Row="1" 
+                                    BackgroundColor="{StaticResource Gray100}" 
+                                    Padding="15,12"
+                                    StrokeThickness="0">
+                                <Label Text="TOQUE PARA AVALIAR" 
+                                       FontSize="12" 
+                                       FontAttributes="Bold" 
+                                       TextColor="{StaticResource Primary}" 
+                                       HorizontalOptions="Center" />
+                            </Border>
+                        </Grid>
+                    </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>

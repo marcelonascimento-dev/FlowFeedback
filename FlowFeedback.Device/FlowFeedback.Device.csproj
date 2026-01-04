@@ -66,4 +66,10 @@
 		<PackageReference Include="UraniumUI.Material" Version="2.14.0" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <MauiXaml Update="Views\VotacaoPopup.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	</ItemGroup>
+
 </Project>

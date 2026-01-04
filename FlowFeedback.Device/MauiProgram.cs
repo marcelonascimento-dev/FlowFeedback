@@ -12,8 +12,6 @@ public static class MauiProgram
         builder
             .UseMauiApp<App>()
             .UseMauiCommunityToolkit()
-            .UseUraniumUI()
-            .UseUraniumUIMaterial()
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -22,7 +20,8 @@ public static class MauiProgram
             });
         builder.Services.AddSingleton<DatabaseService>();
         builder.Services.AddTransient<MainViewModel>();
-        builder.Services.AddTransient<MainPage>();
+        builder.Services.AddSingleton<MainPage>();
+        builder.Services.AddSingleton(new HttpClient { BaseAddress = new Uri("https://localhost:7274/api/") });
 
         return builder.Build();
     }

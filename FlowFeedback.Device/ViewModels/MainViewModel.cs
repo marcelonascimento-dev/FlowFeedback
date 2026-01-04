@@ -1,5 +1,8 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Maui.Extensions;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using FlowFeedback.Device.Messages;
 using FlowFeedback.Device.Models;
 using FlowFeedback.Device.Services;
 using System.Collections.ObjectModel;
@@ -7,13 +10,13 @@ using System.Net.Http.Json;
 
 namespace FlowFeedback.Device.ViewModels;
 
-public partial class MainViewModel : ObservableObject
+public partial class MainViewModel : ObservableObject, IRecipient<VotoRegistradoMessage>
 {
     private readonly DatabaseService _dbService;
     private readonly HttpClient _httpClient;
 
     [ObservableProperty]
-    private ObservableCollection<AlvoDto> alvos = new();
+    private ObservableCollection<AlvoDto> alvos = [];
 
     [ObservableProperty]
     private bool estaCarregando;
@@ -22,6 +25,7 @@ public partial class MainViewModel : ObservableObject
     {
         _dbService = dbService;
         _httpClient = new HttpClient { BaseAddress = new Uri("https://localhost:7274/api/") };
+        WeakReferenceMessenger.Default.RegisterAll(this);
     }
 
     [RelayCommand]
@@ -33,7 +37,6 @@ public partial class MainViewModel : ObservableObject
         {
             EstaCarregando = true;
 
-            // Substituir pelo ID real do dispositivo configurado no seu banco
             var deviceId = Guid.Parse("16053cfe-e2fa-47b6-b2b5-66f51efd319f");
 
             var config = await _httpClient.GetFromJsonAsync<ConfigResponse>($"config/dispositivo/{deviceId}");
@@ -60,10 +63,83 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private async Task AbrirVotacao(AlvoDto alvo)
     {
-        // Lógica para abrir o popup de notas que faremos a seguir
+        var popup = new Views.VotacaoPopup();
+
+        var popupVm = new VotacaoPopupViewModel(alvo, _dbService, popup);
+
+        popup.BindingContext = popupVm;
+
+        await Shell.Current.CurrentPage.ShowPopupAsync(popup);
+    }
+
+    public void Receive(VotoRegistradoMessage message)
+    {
+        _ = SincronizarDados();
+    }
+
+    private async Task SincronizarDados()
+    {
+        try
+        {
+            var votosPendentes = await _dbService.ObterVotosPendentesAsync();
+
+            if (votosPendentes == null || !votosPendentes.Any())
+                return;
+
+            var deviceId = Guid.Parse("16053cfe-e2fa-47b6-b2b5-66f51efd319f");
+            var tenantId = Guid.Parse("7e95df6b-71aa-42eb-b19a-6beea3782c3c");
+
+            var request = new SyncVotosRequest(
+                tenantId,
+                deviceId,
+                votosPendentes.Select(v => new VotoItemDto(
+                    v.AlvoId,
+                    v.Nota,
+                    v.DataHora,
+                    v.TagMotivo
+                )).ToList()
+            );
+
+            var response = await _httpClient.PostAsJsonAsync("sync/votos", request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var idsLocal = votosPendentes.Select(v => v.Id);
+                await _dbService.MarcarComoSincronizadoAsync(idsLocal);
+
+                System.Diagnostics.Debug.WriteLine($"[SYNC] {votosPendentes.Count} votos enviados.");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[SYNC ERROR]: {ex.Message}");
+        }
     }
 }
 
-// DTOs temporários para bater com a API (Pode mover para ficheiros separados)
 public record ConfigResponse(Guid TenantId, string NomeUnidade, List<AlvoDto> Cards);
-public record AlvoDto(Guid Id, string Titulo, string Subtitulo, string ImagemUrl);
+public record AlvoDto(
+    Guid Id,
+    string Titulo,
+    string Subtitulo,
+    string? ImagemUrl,
+    int Tipo)
+{
+    public string TipoFormatado => Tipo switch
+    {
+        1 => "Pessoa",
+        2 => "Serviço",
+        3 => "Ambiente",
+        4 => "Produto",
+        _ => "Geral"
+    };
+
+    public string IconeTipo => Tipo switch
+    {
+        1 => "person",
+        2 => "settings",
+        3 => "location_on",
+        4 => "shopping_bag",
+        _ => "info"
+    };
+}

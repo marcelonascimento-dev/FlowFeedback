@@ -1,0 +1,18 @@
+﻿{
+  "1": {
+    "positivas": [ "Simpatia", "Agilidade", "Educação", "Conhecimento", "Boa Vontade" ],
+    "negativas": [ "Mau Humor", "Falta de Atenção", "Demora", "Informação Incorreta", "Grosseria" ]
+  },
+  "2": {
+    "positivas": [ "Eficiente", "Rápido", "Organizado", "Fácil de Usar", "Preço Justo" ],
+    "negativas": [ "Lento", "Confuso", "Burocrático", "Caro", "Indisponível" ]
+  },
+  "3": {
+    "positivas": [ "Limpo", "Cheiroso", "Iluminado", "Climatizado", "Espaçoso" ],
+    "negativas": [ "Sujo", "Mau Cheiro", "Barulhento", "Escuro", "Apertado" ]
+  },
+  "4": {
+    "positivas": [ "Fresco", "Qualidade", "Bem Embalado", "Variedade", "Aparência" ],
+    "negativas": [ "Vencido", "Estragado", "Caro", "Pouca Opção", "Embalagem Ruim" ]
+  }
+}
