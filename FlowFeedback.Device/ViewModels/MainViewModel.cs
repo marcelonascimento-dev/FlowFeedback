@@ -42,7 +42,7 @@ public partial class MainViewModel : ObservableObject, IRecipient<VotoRegistrado
         {
             EstaCarregando = true;
 
-            var config = await _httpClient.GetFromJsonAsync<ConfigResponse>($"config/dispositivo/{_configuration.DeviceId}");
+            var config = await _httpClient.GetFromJsonAsync<ConfigResponse>($"config/dispositivo/{_configuration.DeviceId}s");
 
             if (config?.Cards != null)
             {

@@ -5,8 +5,7 @@
                xmlns:viewmodel="clr-namespace:FlowFeedback.Device.ViewModels"
                xmlns:models="clr-namespace:FlowFeedback.Device.Models"
                x:Class="FlowFeedback.Device.Views.VotacaoPopup"
-               x:Name="Self"
-               Color="Transparent">
+               x:Name="Self">
 
     <Border BackgroundColor="White" 
             Padding="20" 
@@ -47,7 +46,7 @@
                                     JustifyContent="Center" 
                                     AlignContent="Center">
                             <BindableLayout.ItemTemplate>
-                                <DataTemplate x:DataType="viewmodel:NpsOption">
+                                <DataTemplate x:DataType="models:NpsOption">
                                     <Button Text="{Binding Nota}" 
                                             Command="{Binding Source={x:Reference Self}, Path=BindingContext.SelecionarNotaCommand}"
                                             CommandParameter="{Binding .}"
@@ -96,13 +95,11 @@
                             </BindableLayout.ItemTemplate>
                         </FlexLayout>
 
-                        <Button Text="Pular e finalizar" 
-                                Command="{Binding PularTagsCommand}" 
-                                BackgroundColor="Transparent" 
-                                TextColor="Gray" 
-                                FontSize="14"
-                                TextDecorations="Underline"
-                                HorizontalOptions="Center"/>
+                        <Label Text="Pular e finalizar" TextColor="Gray" FontSize="14" TextDecorations="Underline" HorizontalOptions="Center">       
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding PularTagsCommand}" />
+                            </Label.GestureRecognizers>
+                        </Label>
                     </VerticalStackLayout>
                     <VerticalStackLayout x:Name="ViewSucesso"
                      Grid.Row="1" 
