@@ -34,6 +34,16 @@ public partial class VotacaoPopup : CommunityToolkit.Maui.Views.Popup
                     ViewTags.TranslateToAsync(0, 0, 400, Easing.CubicOut)
                 );
             }
+
+            if (e.PropertyName == nameof(VotacaoPopupViewModel.MostrarAgradecimento) && vm.MostrarAgradecimento)
+            {
+                ViewSucesso.Opacity = 0;
+                ViewSucesso.Scale = 0.5;
+
+                await ViewSucesso.FadeToAsync(1, 400);
+                await ViewSucesso.ScaleToAsync(1, 500, Easing.SpringOut);
+            }
+
         }
     }
 }

@@ -6,99 +6,138 @@
                xmlns:models="clr-namespace:FlowFeedback.Device.Models"
                x:Class="FlowFeedback.Device.Views.VotacaoPopup"
                x:Name="Self"
-               Size="800, 600"
                Color="Transparent">
 
-    <Border BackgroundColor="White" Padding="30" StrokeThickness="0">
+    <Border BackgroundColor="White" 
+            Padding="20" 
+            StrokeThickness="0"
+            WidthRequest="700"
+            MaximumHeightRequest="600"
+            VerticalOptions="Center"
+            HorizontalOptions="Center">
         <Border.StrokeShape>
             <RoundRectangle CornerRadius="40" />
         </Border.StrokeShape>
 
-        <Grid RowDefinitions="Auto, *, Auto">
+        <Grid RowDefinitions="Auto, *, Auto" VerticalOptions="Fill">
 
             <Label Grid.Row="0" 
                    Text="{Binding Titulo}" 
-                   FontSize="28" 
+                   FontSize="24" 
                    FontAttributes="Bold" 
                    HorizontalOptions="Center" 
                    TextColor="#2C3E50"
-                   Margin="0,0,0,20"/>
+                   Margin="0,0,0,15"/>
 
-            <VerticalStackLayout x:Name="ViewNotas"
-                                 Grid.Row="1" 
-                                 Spacing="10" 
-                                 IsVisible="{Binding MostrarNotas}"
-                                 VerticalOptions="Center">
+            <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Never">
+                <Grid>
+                    <VerticalStackLayout x:Name="ViewNotas"
+                                         Spacing="10" 
+                                         IsVisible="{Binding MostrarNotas}"
+                                         VerticalOptions="Center">
 
-                <Label Text="Como foi seu atendimento?" 
+                        <Label Text="Como foi seu atendimento?" 
+                               FontSize="18" 
+                               HorizontalOptions="Center" 
+                               TextColor="Gray"
+                               Margin="0,0,0,5"/>
+
+                        <FlexLayout BindableLayout.ItemsSource="{Binding OpcoesNps}" 
+                                    Wrap="Wrap" 
+                                    JustifyContent="Center" 
+                                    AlignContent="Center">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="viewmodel:NpsOption">
+                                    <Button Text="{Binding Nota}" 
+                                            Command="{Binding Source={x:Reference Self}, Path=BindingContext.SelecionarNotaCommand}"
+                                            CommandParameter="{Binding .}"
+                                            WidthRequest="75" 
+                                            HeightRequest="75" 
+                                            CornerRadius="37" 
+                                            Margin="5"
+                                            FontSize="22" 
+                                            FontAttributes="Bold" 
+                                            BackgroundColor="{Binding Cor}" 
+                                            TextColor="White" />
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </FlexLayout>
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout x:Name="ViewTags"
+                                         Spacing="15" 
+                                         IsVisible="{Binding MostrarTags}"
+                                         Opacity="0"
+                                         TranslationX="50"
+                                         VerticalOptions="Center">
+
+                        <Label Text="Qual o principal motivo?" 
+                               FontSize="20" 
+                               HorizontalOptions="Center" 
+                               FontAttributes="Bold"
+                               TextColor="#34495E"/>
+
+                        <FlexLayout BindableLayout.ItemsSource="{Binding TagsAtuais}" 
+                                    Wrap="Wrap" 
+                                    JustifyContent="Center">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="models:FeedbackTag">
+                                    <Button Text="{Binding Nome}" 
+                                            Command="{Binding Source={x:Reference Self}, Path=BindingContext.FinalizarComTagCommand}"
+                                            CommandParameter="{Binding .}"
+                                            Margin="4" 
+                                            Padding="20,0" 
+                                            HeightRequest="60" 
+                                            CornerRadius="30"
+                                            FontSize="16"
+                                            BackgroundColor="#F2F2F2" 
+                                            TextColor="#2C3E50"/>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </FlexLayout>
+
+                        <Button Text="Pular e finalizar" 
+                                Command="{Binding PularTagsCommand}" 
+                                BackgroundColor="Transparent" 
+                                TextColor="Gray" 
+                                FontSize="14"
+                                TextDecorations="Underline"
+                                HorizontalOptions="Center"/>
+                    </VerticalStackLayout>
+                    <VerticalStackLayout x:Name="ViewSucesso"
+                     Grid.Row="1" 
+                     Spacing="20" 
+                     IsVisible="{Binding MostrarAgradecimento}"
+                     VerticalOptions="Center">
+
+                                    <Label Text="✓" 
+                       FontSize="80" 
+                       TextColor="{DynamicResource Primary}" 
+                       HorizontalOptions="Center" 
+                       FontAttributes="Bold"/>
+
+                                    <Label Text="Obrigado!" 
+                       FontSize="32" 
+                       FontAttributes="Bold" 
+                       HorizontalOptions="Center" 
+                       TextColor="#2C3E50"/>
+
+                                    <Label Text="Sua opinião é muito importante para nós." 
                        FontSize="18" 
                        HorizontalOptions="Center" 
+                       HorizontalTextAlignment="Center"
                        TextColor="Gray"
-                       Margin="0,0,0,10"/>
+                       Margin="20,0"/>
 
-                <FlexLayout BindableLayout.ItemsSource="{Binding OpcoesNps}" 
-                            Wrap="Wrap" 
-                            JustifyContent="Center" 
-                            AlignContent="Center">
-                    <BindableLayout.ItemTemplate>
-                        <DataTemplate x:DataType="viewmodel:NpsOption">
-                            <Button Text="{Binding Nota}" 
-                                    Command="{Binding Source={x:Reference Self}, Path=BindingContext.SelecionarNotaCommand}"
-                                    CommandParameter="{Binding .}"
-                                    WidthRequest="90" 
-                                    HeightRequest="90" 
-                                    CornerRadius="45" 
-                                    Margin="8"
-                                    FontSize="26" 
-                                    FontAttributes="Bold" 
-                                    BackgroundColor="{Binding Cor}" 
-                                    TextColor="White" />
-                        </DataTemplate>
-                    </BindableLayout.ItemTemplate>
-                </FlexLayout>
-            </VerticalStackLayout>
+                                    <BoxView HeightRequest="4" 
+                         WidthRequest="100" 
+                         Color="{DynamicResource Primary}" 
+                         HorizontalOptions="Center" 
+                         CornerRadius="2"/>
+                    </VerticalStackLayout>
 
-            <VerticalStackLayout x:Name="ViewTags"
-                                 Grid.Row="1" 
-                                 Spacing="20" 
-                                 IsVisible="{Binding MostrarTags}"
-                                 Opacity="0"
-                                 TranslationX="100"
-                                 VerticalOptions="Center">
-
-                <Label Text="Qual o principal motivo?" 
-                       FontSize="22" 
-                       HorizontalOptions="Center" 
-                       FontAttributes="Bold"
-                       TextColor="#34495E"/>
-
-                <FlexLayout BindableLayout.ItemsSource="{Binding TagsAtuais}" 
-                            Wrap="Wrap" 
-                            JustifyContent="Center">
-                    <BindableLayout.ItemTemplate>
-                        <DataTemplate x:DataType="models:FeedbackTag">
-                            <Button Text="{Binding Nome}" 
-                                    Command="{Binding Source={x:Reference Self}, Path=BindingContext.FinalizarComTagCommand}"
-                                    CommandParameter="{Binding .}"
-                                    Margin="6" 
-                                    Padding="25,0" 
-                                    HeightRequest="70" 
-                                    CornerRadius="35"
-                                    FontSize="18"
-                                    BackgroundColor="#F2F2F2" 
-                                    TextColor="#2C3E50"/>
-                        </DataTemplate>
-                    </BindableLayout.ItemTemplate>
-                </FlexLayout>
-
-                <Button Text="Pular e finalizar" 
-                        Command="{Binding PularTagsCommand}" 
-                        BackgroundColor="Transparent" 
-                        TextColor="Gray" 
-                        FontSize="16"
-                        TextDecorations="Underline"
-                        HorizontalOptions="Center"/>
-            </VerticalStackLayout>
+                </Grid>
+            </ScrollView>
 
             <Button Grid.Row="2" 
                     Text="CANCELAR" 
@@ -106,9 +145,9 @@
                     BackgroundColor="Transparent" 
                     TextColor="#E74C3C" 
                     FontAttributes="Bold" 
-                    FontSize="16"
+                    FontSize="14"
                     HorizontalOptions="Center"
-                    Margin="0,20,0,0"/>
+                    Margin="0,15,0,0"/>
         </Grid>
     </Border>
 </toolkit:Popup>

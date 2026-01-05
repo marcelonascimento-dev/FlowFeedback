@@ -8,6 +8,9 @@ public class Unidade
     public string Cidade { get; private set; }
     public string Endereco { get; private set; }
     public bool Ativa { get; private set; }
+    public string? LogoUrlOverride { get; set; }
+    public string? CorPrimariaOverride { get; set; }
+    public string? CorSecundariaOverride { get; set; }
 
     protected Unidade() { }
 

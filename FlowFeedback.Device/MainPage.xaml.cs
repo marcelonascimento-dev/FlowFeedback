@@ -1,4 +1,5 @@
-﻿using FlowFeedback.Device.ViewModels;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using FlowFeedback.Device.ViewModels;
 
 namespace FlowFeedback.Device;
 
@@ -8,6 +9,14 @@ public partial class MainPage : ContentPage
     {
         InitializeComponent();
         BindingContext = vm;
+
+        WeakReferenceMessenger.Default.Register<UpdateThemeMessage>(this, (r, m) =>
+        {
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                AplicarCores(m.Primaria, m.Secundaria);
+            });
+        });
     }
 
     protected override async void OnAppearing()
@@ -16,16 +25,19 @@ public partial class MainPage : ContentPage
 
         if (BindingContext is MainViewModel vm)
         {
-            // Executa o comando de carga
             await vm.CarregarConfiguracaoInicialCommand.ExecuteAsync(null);
-
-            // Verificação simples no Console de Saída
-            System.Diagnostics.Debug.WriteLine($"[DEBUG] Quantidade de Alvos: {vm.Alvos.Count}");
-
-            if (vm.Alvos.Count == 0)
-            {
-                System.Diagnostics.Debug.WriteLine("[AVISO] A lista de alvos está vazia após o carregamento.");
-            }
         }
+    }
+
+    public void AplicarCores(string primaria, string secundaria)
+    {
+        var colorP = Color.FromArgb(primaria);
+        var colorS = Color.FromArgb(secundaria);
+
+        Application.Current.Resources["Primary"] = colorP;
+
+        Application.Current.Resources["PrimaryDark"] = colorP.WithLuminosity(colorP.GetLuminosity() * 0.8f);
+
+        Application.Current.Resources["Secondary"] = colorS;
     }
 }

@@ -48,6 +48,9 @@ public class ConfigController : ControllerBase
             GrupoNome = tenant?.NomeCorporativo,
             UnidadeId = unidade.Id,
             UnidadeNome = unidade.NomeLoja,
+            LogoUrl = unidade.LogoUrlOverride ?? tenant.LogoUrl,
+            CorPrimaria = unidade.CorPrimariaOverride ?? tenant.CorPrimaria,
+            CorSecundaria = unidade.CorSecundariaOverride ?? tenant.CorSecundaria,
             Cidade = unidade.Cidade,
             Cards = alvos.Select(a => new
             {

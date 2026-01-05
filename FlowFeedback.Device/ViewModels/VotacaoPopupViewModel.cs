@@ -27,6 +27,10 @@ public partial class VotacaoPopupViewModel : ObservableObject
     private bool _mostrarTags = false;
 
     [ObservableProperty]
+    private bool _mostrarAgradecimento = false;
+
+
+    [ObservableProperty]
     private List<FeedbackTag> _tagsAtuais;
 
     public VotacaoPopupViewModel(AlvoDto alvo, DatabaseService dbService, CommunityToolkit.Maui.Views.Popup popup)
@@ -97,8 +101,17 @@ public partial class VotacaoPopupViewModel : ObservableObject
                 DataHora = DateTime.Now
             });
 
-            await FecharPopup();
+            // Em vez de fechar direto, mostramos o agradecimento
+            MostrarNotas = false;
+            MostrarTags = false;
+            MostrarAgradecimento = true;
+
+            // Notifica o sistema para subir o voto
             WeakReferenceMessenger.Default.Send(new VotoRegistradoMessage());
+
+            // Aguarda 3 segundos e fecha o popup automaticamente
+            await Task.Delay(3000);
+            await FecharPopup();
         }
         catch (Exception ex)
         {

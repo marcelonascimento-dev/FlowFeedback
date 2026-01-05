@@ -13,5 +13,11 @@ namespace FlowFeedback.Device
         {
             return new Window(new AppShell());
         }
+
+        public void AplicarCores(string primaria, string secundaria)
+        {
+            Current?.Resources["PrimaryColor"] = Color.FromArgb(primaria);
+            Current?.Resources["SecondaryColor"] = Color.FromArgb(secundaria);
+        }
     }
 }

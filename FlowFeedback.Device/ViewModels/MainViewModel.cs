@@ -21,6 +21,9 @@ public partial class MainViewModel : ObservableObject, IRecipient<VotoRegistrado
     [ObservableProperty]
     private bool estaCarregando;
 
+    [ObservableProperty]
+    private string? logoUrl;
+
     public MainViewModel(DatabaseService dbService)
     {
         _dbService = dbService;
@@ -49,10 +52,16 @@ public partial class MainViewModel : ObservableObject, IRecipient<VotoRegistrado
                     Alvos.Add(card);
                 }
             }
+
+            var primaria = config?.CorPrimaria;
+            var secundaria = config?.CorSecundaria;
+            LogoUrl = config?.LogoUrl;
+
+            WeakReferenceMessenger.Default.Send(new UpdateThemeMessage(primaria, secundaria));
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlert("Erro", "Não foi possível carregar as configurações.", "OK");
+            await Shell.Current.DisplayAlertAsync("Erro", "Não foi possível carregar as configurações.", "OK");
         }
         finally
         {
@@ -117,7 +126,8 @@ public partial class MainViewModel : ObservableObject, IRecipient<VotoRegistrado
     }
 }
 
-public record ConfigResponse(Guid TenantId, string NomeUnidade, List<AlvoDto> Cards);
+public record ConfigResponse(Guid TenantId, string NomeUnidade, List<AlvoDto> Cards, string? CorPrimaria, string? CorSecundaria, string LogoUrl);
+public record UpdateThemeMessage(string? Primaria, string? Secundaria);
 public record AlvoDto(
     Guid Id,
     string Titulo,
