@@ -2,6 +2,6 @@
 
 public record PacoteVotosDto(
     Guid TenantId,          
-    Guid DeviceId,          
+    string DeviceId,          
     List<RegistrarVotoDto> Votos 
 );

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FlowFeedback.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260104175924_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260105031950_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -35,7 +35,6 @@ namespace FlowFeedback.Infrastructure.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("ImagemUrl")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("OrdemExibicao")
@@ -43,28 +42,31 @@ namespace FlowFeedback.Infrastructure.Migrations
 
                     b.Property<string>("Subtitulo")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<int>("Tipo")
                         .HasColumnType("int");
 
                     b.Property<string>("Titulo")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("UnidadeId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("UnidadeId");
 
                     b.ToTable("AlvosAvaliacao");
                 });
 
             modelBuilder.Entity("FlowFeedback.Domain.Entities.Dispositivo", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<bool>("Ativo")
                         .HasColumnType("bit");
@@ -81,9 +83,42 @@ namespace FlowFeedback.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TenantId", "UnidadeId");
+                    b.HasIndex("UnidadeId");
 
                     b.ToTable("Dispositivos");
+                });
+
+            modelBuilder.Entity("FlowFeedback.Domain.Entities.Tenant", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("Ativo")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Cnpj")
+                        .IsRequired()
+                        .HasMaxLength(18)
+                        .HasColumnType("nvarchar(18)");
+
+                    b.Property<string>("CorPrimaria")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CorSecundaria")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LogoUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NomeCorporativo")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Tenants");
                 });
 
             modelBuilder.Entity("FlowFeedback.Domain.Entities.Unidade", b =>
@@ -95,13 +130,27 @@ namespace FlowFeedback.Infrastructure.Migrations
                     b.Property<bool>("Ativa")
                         .HasColumnType("bit");
 
-                    b.Property<string>("CodigoExterno")
+                    b.Property<string>("Cidade")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Nome")
+                    b.Property<string>("CorPrimariaOverride")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CorSecundariaOverride")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Endereco")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LogoUrlOverride")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NomeLoja")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uniqueidentifier");
@@ -130,8 +179,9 @@ namespace FlowFeedback.Infrastructure.Migrations
                     b.Property<DateTime>("DataHoraVoto")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("DeviceId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("DeviceId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Nota")
                         .HasColumnType("int");
@@ -146,6 +196,8 @@ namespace FlowFeedback.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AlvoAvaliacaoId");
 
                     b.HasIndex("TenantId", "UnidadeId", "DataHoraVoto");
 

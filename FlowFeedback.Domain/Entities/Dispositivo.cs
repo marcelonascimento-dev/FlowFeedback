@@ -2,7 +2,7 @@
 
 public class Dispositivo
 {
-    public Guid Id { get; private set; }
+    public string Id { get; private set; }
     public Guid TenantId { get; private set; }
     public Guid UnidadeId { get; private set; }
     public string NomeLocal { get; private set; }
@@ -10,7 +10,7 @@ public class Dispositivo
 
     protected Dispositivo() { }
 
-    public Dispositivo(Guid id, Guid tenantId, Guid unidadeId, string nomeLocal)
+    public Dispositivo(string id, Guid tenantId, Guid unidadeId, string nomeLocal)
     {
         Id = id;
         TenantId = tenantId;

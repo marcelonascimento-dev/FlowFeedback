@@ -14,6 +14,7 @@ public partial class MainViewModel : ObservableObject, IRecipient<VotoRegistrado
 {
     private readonly DatabaseService _dbService;
     private readonly HttpClient _httpClient;
+    private readonly ConfigurationService _configuration;
 
     [ObservableProperty]
     private ObservableCollection<AlvoDto> alvos = [];
@@ -24,10 +25,11 @@ public partial class MainViewModel : ObservableObject, IRecipient<VotoRegistrado
     [ObservableProperty]
     private string? logoUrl;
 
-    public MainViewModel(DatabaseService dbService)
+    public MainViewModel(DatabaseService dbService, ConfigurationService configuration, HttpClient httpClient)
     {
         _dbService = dbService;
-        _httpClient = new HttpClient { BaseAddress = new Uri("https://localhost:7274/api/") };
+        _httpClient = httpClient;
+        _configuration = configuration;
         WeakReferenceMessenger.Default.RegisterAll(this);
     }
 
@@ -40,9 +42,7 @@ public partial class MainViewModel : ObservableObject, IRecipient<VotoRegistrado
         {
             EstaCarregando = true;
 
-            var deviceId = Guid.Parse("16053cfe-e2fa-47b6-b2b5-66f51efd319f");
-
-            var config = await _httpClient.GetFromJsonAsync<ConfigResponse>($"config/dispositivo/{deviceId}");
+            var config = await _httpClient.GetFromJsonAsync<ConfigResponse>($"config/dispositivo/{_configuration.DeviceId}");
 
             if (config?.Cards != null)
             {

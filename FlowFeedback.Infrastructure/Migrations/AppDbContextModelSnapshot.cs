@@ -62,9 +62,8 @@ namespace FlowFeedback.Infrastructure.Migrations
 
             modelBuilder.Entity("FlowFeedback.Domain.Entities.Dispositivo", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<bool>("Ativo")
                         .HasColumnType("bit");
@@ -177,8 +176,9 @@ namespace FlowFeedback.Infrastructure.Migrations
                     b.Property<DateTime>("DataHoraVoto")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("DeviceId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("DeviceId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Nota")
                         .HasColumnType("int");

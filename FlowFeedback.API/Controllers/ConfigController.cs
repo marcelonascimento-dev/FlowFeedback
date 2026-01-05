@@ -16,7 +16,7 @@ public class ConfigController : ControllerBase
     }
 
     [HttpGet("dispositivo/{deviceId}")]
-    public async Task<IActionResult> ObterConfiguracaoPorDispositivo(Guid deviceId)
+    public async Task<IActionResult> ObterConfiguracaoPorDispositivo(string deviceId)
     {
         var dispositivo = await _context.Dispositivos
             .AsNoTracking()

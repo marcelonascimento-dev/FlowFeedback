@@ -38,15 +38,15 @@ public class SeedController : ControllerBase
         await _context.Unidades.AddRangeAsync(unidadeCentro, unidadeShopping);
         await _context.SaveChangesAsync();
 
-        var deviceAcougue = new Dispositivo(Guid.NewGuid(), tenant.Id, unidadeCentro.Id, "Totem Açougue");
-        var deviceCheckin = new Dispositivo(Guid.NewGuid(), tenant.Id, unidadeShopping.Id, "Totem Entrada");
+        var deviceAcougue = new Dispositivo("PC-1967_OPTIPLEX_7060", tenant.Id, unidadeCentro.Id, "Totem Açougue");
+        var deviceCheckin = new Dispositivo(Guid.NewGuid().ToString(), tenant.Id, unidadeShopping.Id, "Totem Entrada");
 
         await _context.Dispositivos.AddRangeAsync(deviceAcougue, deviceCheckin);
 
         var alvos = new List<AlvoAvaliacao>
         {
             new AlvoAvaliacao(unidadeCentro.Id, "João Silva", "Açougueiro", "https://i.pravatar.cc/300?img=11", TipoAlvo.Pessoa, 1),
-            new AlvoAvaliacao(unidadeCentro.Id, "Limpeza Açougue", "Organização", null, TipoAlvo.Ambiente, 2),
+            new AlvoAvaliacao(unidadeCentro.Id, "Limpeza Açougue", "Organização", "https://www.assai.com.br/sites/default/files/whatsapp_image_2021-10-21_at_12.27.38_0_0.jpg", TipoAlvo.Ambiente, 2),
 
             new AlvoAvaliacao(unidadeShopping.Id, "Atendimento Geral", "Cordialidade", null, TipoAlvo.Servico, 1),
             new AlvoAvaliacao(unidadeShopping.Id, "Maria Oliveira", "Recepcionista", "https://i.pravatar.cc/300?img=5", TipoAlvo.Pessoa, 2)

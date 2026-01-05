@@ -18,7 +18,7 @@ public class FeedbackService : IFeedbackService
         _context = context;
     }
 
-    public async Task ProcessarVotosDoTabletAsync(Guid tenantId, Guid deviceId, List<RegistrarVotoDto> votosDto)
+    public async Task ProcessarVotosDoTabletAsync(Guid tenantId, string deviceId, List<RegistrarVotoDto> votosDto)
     {
         var dispositivo = await _context.Dispositivos.AsNoTracking()
             .FirstOrDefaultAsync(d => d.Id == deviceId && d.TenantId == tenantId);

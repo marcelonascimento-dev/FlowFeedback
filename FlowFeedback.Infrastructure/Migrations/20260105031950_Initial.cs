@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace FlowFeedback.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -16,13 +16,13 @@ namespace FlowFeedback.Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Titulo = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Subtitulo = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ImagemUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    UnidadeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Titulo = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Subtitulo = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    ImagemUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Tipo = table.Column<int>(type: "int", nullable: false),
-                    Ativo = table.Column<bool>(type: "bit", nullable: false),
-                    OrdemExibicao = table.Column<int>(type: "int", nullable: false)
+                    OrdemExibicao = table.Column<int>(type: "int", nullable: false),
+                    Ativo = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -33,7 +33,7 @@ namespace FlowFeedback.Infrastructure.Migrations
                 name: "Dispositivos",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     UnidadeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     NomeLocal = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -45,14 +45,35 @@ namespace FlowFeedback.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Tenants",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    NomeCorporativo = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
+                    Cnpj = table.Column<string>(type: "nvarchar(18)", maxLength: 18, nullable: false),
+                    Ativo = table.Column<bool>(type: "bit", nullable: false),
+                    LogoUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CorPrimaria = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CorSecundaria = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Tenants", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Unidades",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Nome = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CodigoExterno = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Ativa = table.Column<bool>(type: "bit", nullable: false)
+                    NomeLoja = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Cidade = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Endereco = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Ativa = table.Column<bool>(type: "bit", nullable: false),
+                    LogoUrlOverride = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CorPrimariaOverride = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CorSecundariaOverride = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -67,7 +88,7 @@ namespace FlowFeedback.Infrastructure.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     UnidadeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    DeviceId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    DeviceId = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     AlvoAvaliacaoId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Nota = table.Column<int>(type: "int", nullable: false),
                     TagMotivo = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -80,14 +101,24 @@ namespace FlowFeedback.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Dispositivos_TenantId_UnidadeId",
+                name: "IX_AlvosAvaliacao_UnidadeId",
+                table: "AlvosAvaliacao",
+                column: "UnidadeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Dispositivos_UnidadeId",
                 table: "Dispositivos",
-                columns: new[] { "TenantId", "UnidadeId" });
+                column: "UnidadeId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Unidades_TenantId",
                 table: "Unidades",
                 column: "TenantId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Votos_AlvoAvaliacaoId",
+                table: "Votos",
+                column: "AlvoAvaliacaoId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Votos_TenantId_UnidadeId_DataHoraVoto",
@@ -103,6 +134,9 @@ namespace FlowFeedback.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "Dispositivos");
+
+            migrationBuilder.DropTable(
+                name: "Tenants");
 
             migrationBuilder.DropTable(
                 name: "Unidades");
