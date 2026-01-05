@@ -3,66 +3,67 @@ using FlowFeedback.Domain.Enums;
 using FlowFeedback.Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace FlowFeedback.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class SeedController : ControllerBase
+public class SeedController(AppDbContext context) : ControllerBase
 {
-    private readonly AppDbContext _context;
-
-    public SeedController(AppDbContext context)
-    {
-        _context = context;
-    }
-
     [HttpPost("gerar-dados-teste")]
     public async Task<IActionResult> GerarDados()
     {
-        _context.Votos.RemoveRange(await _context.Votos.ToListAsync());
-        _context.AlvosAvaliacao.RemoveRange(await _context.AlvosAvaliacao.ToListAsync());
-        _context.Dispositivos.RemoveRange(await _context.Dispositivos.ToListAsync());
-        _context.Unidades.RemoveRange(await _context.Unidades.ToListAsync());
-        _context.Tenants.RemoveRange(await _context.Tenants.ToListAsync());
+        // Limpeza (Mantendo a lógica anterior)
+        context.Votos.RemoveRange(await context.Votos.ToListAsync());
+        context.AlvosAvaliacao.RemoveRange(await context.AlvosAvaliacao.ToListAsync());
+        context.Dispositivos.RemoveRange(await context.Dispositivos.ToListAsync());
+        context.Unidades.RemoveRange(await context.Unidades.ToListAsync());
+        context.Tenants.RemoveRange(await context.Tenants.ToListAsync());
+        await context.SaveChangesAsync();
 
-        await _context.SaveChangesAsync();
-
+        // 1. Criar estrutura base
         var tenant = new Tenant("Grupo Max Supermercados", "12.345.678/0001-99");
-        await _context.Tenants.AddAsync(tenant);
-        await _context.SaveChangesAsync();
+        await context.Tenants.AddAsync(tenant);
+        await context.SaveChangesAsync();
 
         var unidadeCentro = new Unidade(tenant.Id, "Max - Loja Centro", "Goiânia", "Rua 10, 123");
-        var unidadeShopping = new Unidade(tenant.Id, "Max - Loja Shopping", "Goiânia", "Av. T-63, S/N");
+        await context.Unidades.AddAsync(unidadeCentro);
+        await context.SaveChangesAsync();
 
-        await _context.Unidades.AddRangeAsync(unidadeCentro, unidadeShopping);
-        await _context.SaveChangesAsync();
-
+        // 2. Dispositivos (Totens)
         var deviceAcougue = new Dispositivo("PC-1967_OPTIPLEX_7060", tenant.Id, unidadeCentro.Id, "Totem Açougue");
-        var deviceCheckin = new Dispositivo(Guid.NewGuid().ToString(), tenant.Id, unidadeShopping.Id, "Totem Entrada");
+        var deviceHorti = new Dispositivo("HT_01_TESTE", tenant.Id, unidadeCentro.Id, "Totem Hortifrúti");
+        await context.Dispositivos.AddRangeAsync(deviceAcougue, deviceHorti);
 
-        await _context.Dispositivos.AddRangeAsync(deviceAcougue, deviceCheckin);
+        // 3. Funcionários do Açougue
+        var funcA1 = new AlvoAvaliacao(unidadeCentro.Id, "João Silva", "Mestre Açougueiro", "https://i.pravatar.cc/300?img=11", TipoAlvo.Pessoa, 1);
+        var funcA2 = new AlvoAvaliacao(unidadeCentro.Id, "Ricardo Souza", "Atendente Açougue", "https://i.pravatar.cc/300?img=12", TipoAlvo.Pessoa, 2);
+        var funcA3 = new AlvoAvaliacao(unidadeCentro.Id, "Marcos Vinícius", "Auxiliar", "https://i.pravatar.cc/300?img=13", TipoAlvo.Pessoa, 3);
+        var limpezaAcougue = new AlvoAvaliacao(unidadeCentro.Id, "Limpeza do Setor", "Açougue", null, TipoAlvo.Ambiente, 4);
 
-        var alvos = new List<AlvoAvaliacao>
-        {
-            new AlvoAvaliacao(unidadeCentro.Id, "João Silva", "Açougueiro", "https://i.pravatar.cc/300?img=11", TipoAlvo.Pessoa, 1),
-            new AlvoAvaliacao(unidadeCentro.Id, "Limpeza Açougue", "Organização", "https://www.assai.com.br/sites/default/files/whatsapp_image_2021-10-21_at_12.27.38_0_0.jpg", TipoAlvo.Ambiente, 2),
+        // 4. Funcionários do Hortifrúti
+        var funcH1 = new AlvoAvaliacao(unidadeCentro.Id, "Maria Oliveira", "Líder Horti", "https://i.pravatar.cc/300?img=5", TipoAlvo.Pessoa, 1);
+        var funcH2 = new AlvoAvaliacao(unidadeCentro.Id, "Ana Costa", "Reposição", "https://i.pravatar.cc/300?img=48", TipoAlvo.Pessoa, 2);
+        var funcH3 = new AlvoAvaliacao(unidadeCentro.Id, "Patrícia Lima", "Atendimento", "https://i.pravatar.cc/300?img=47", TipoAlvo.Pessoa, 3);
+        var qualidadeFrutas = new AlvoAvaliacao(unidadeCentro.Id, "Qualidade e Frescor", "Frutas/Legumes", null, TipoAlvo.Servico, 4);
 
-            new AlvoAvaliacao(unidadeShopping.Id, "Atendimento Geral", "Cordialidade", null, TipoAlvo.Servico, 1),
-            new AlvoAvaliacao(unidadeShopping.Id, "Maria Oliveira", "Recepcionista", "https://i.pravatar.cc/300?img=5", TipoAlvo.Pessoa, 2)
-        };
+        // 5. Vincular Alvos aos Dispositivos específicos
+        // Açougue
+        deviceAcougue.Alvos.Add(funcA1);
+        deviceAcougue.Alvos.Add(funcA2);
+        deviceAcougue.Alvos.Add(funcA3);
+        deviceAcougue.Alvos.Add(limpezaAcougue);
 
-        await _context.AlvosAvaliacao.AddRangeAsync(alvos);
-        await _context.SaveChangesAsync();
+        // Hortifrúti
+        deviceHorti.Alvos.Add(funcH1);
+        deviceHorti.Alvos.Add(funcH2);
+        deviceHorti.Alvos.Add(funcH3);
+        deviceHorti.Alvos.Add(qualidadeFrutas);
 
-        return Ok(new
-        {
-            mensagem = "Estrutura complexa gerada com sucesso!",
-            tenantId = tenant.Id,
-            dispositivos = new[] {
-                new { nome = deviceAcougue.NomeLocal, id = deviceAcougue.Id },
-                new { nome = deviceCheckin.NomeLocal, id = deviceCheckin.Id }
-            }
-        });
+        await context.AlvosAvaliacao.AddRangeAsync(funcA1, funcA2, funcA3, limpezaAcougue, funcH1, funcH2, funcH3, qualidadeFrutas);
+        await context.SaveChangesAsync();
+
+        return Ok("Base de testes atualizada com sucesso!");
     }
 }

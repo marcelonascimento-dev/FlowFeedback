@@ -31,11 +31,10 @@ public class AppDbContext : DbContext
             e.HasIndex(x => x.TenantId);
         });
 
-        modelBuilder.Entity<Dispositivo>(e =>
-        {
-            e.HasKey(x => x.Id);
-            e.HasIndex(x => x.UnidadeId);
-        });
+        modelBuilder.Entity<Dispositivo>()
+            .HasMany(d => d.Alvos)
+            .WithMany(a => a.Dispositivos)
+            .UsingEntity(j => j.ToTable("DispositivoAlvos"));
 
         modelBuilder.Entity<AlvoAvaliacao>(e =>
         {

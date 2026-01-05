@@ -6,5 +6,5 @@ namespace FlowFeedback.Device.Models;
 
 public record SyncVotosRequest(
     Guid TenantId,
-    Guid DeviceId,
+    string DeviceId,
     List<VotoItemDto> Votos);

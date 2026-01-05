@@ -8,6 +8,8 @@ public class Dispositivo
     public string NomeLocal { get; private set; }
     public bool Ativo { get; private set; }
 
+    public ICollection<AlvoAvaliacao> Alvos { get; private set; } = new List<AlvoAvaliacao>();
+
     protected Dispositivo() { }
 
     public Dispositivo(string id, Guid tenantId, Guid unidadeId, string nomeLocal)

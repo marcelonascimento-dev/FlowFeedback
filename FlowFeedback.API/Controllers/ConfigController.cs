@@ -1,4 +1,5 @@
-﻿using FlowFeedback.Infrastructure.Data;
+﻿using FlowFeedback.Domain.Entities;
+using FlowFeedback.Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,6 +20,7 @@ public class ConfigController : ControllerBase
     public async Task<IActionResult> ObterConfiguracaoPorDispositivo(string deviceId)
     {
         var dispositivo = await _context.Dispositivos
+            .Include(d => d.Alvos)
             .AsNoTracking()
             .FirstOrDefaultAsync(d => d.Id == deviceId && d.Ativo);
 
@@ -36,15 +38,14 @@ public class ConfigController : ControllerBase
             .AsNoTracking()
             .FirstOrDefaultAsync(t => t.Id == unidade.TenantId);
 
-        var alvos = await _context.AlvosAvaliacao
-            .AsNoTracking()
-            .Where(a => a.UnidadeId == unidade.Id && a.Ativo)
-            .OrderBy(a => a.OrdemExibicao)
-            .ToListAsync();
+        var alvos = dispositivo.Alvos
+                    .Where(a => a.Ativo)
+                    .OrderBy(a => a.OrdemExibicao)
+                    .ToList();
 
         return Ok(new
         {
-            GrupoId = tenant?.Id,
+            TenantId = tenant?.Id,
             GrupoNome = tenant?.NomeCorporativo,
             UnidadeId = unidade.Id,
             UnidadeNome = unidade.NomeLoja,

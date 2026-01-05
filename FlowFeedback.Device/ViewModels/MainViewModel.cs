@@ -56,6 +56,7 @@ public partial class MainViewModel : ObservableObject, IRecipient<VotoRegistrado
             var primaria = config?.CorPrimaria;
             var secundaria = config?.CorSecundaria;
             LogoUrl = config?.LogoUrl;
+            _configuration.TenantId = config?.TenantId ?? Guid.Empty;
 
             WeakReferenceMessenger.Default.Send(new UpdateThemeMessage(primaria, secundaria));
         }
@@ -95,8 +96,8 @@ public partial class MainViewModel : ObservableObject, IRecipient<VotoRegistrado
             if (votosPendentes == null || !votosPendentes.Any())
                 return;
 
-            var deviceId = Guid.Parse("16053cfe-e2fa-47b6-b2b5-66f51efd319f");
-            var tenantId = Guid.Parse("7e95df6b-71aa-42eb-b19a-6beea3782c3c");
+            var deviceId = _configuration.DeviceId;
+            var tenantId = _configuration.TenantId;
 
             var request = new SyncVotosRequest(
                 tenantId,

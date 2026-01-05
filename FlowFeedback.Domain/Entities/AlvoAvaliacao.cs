@@ -13,6 +13,8 @@ public class AlvoAvaliacao
     public int OrdemExibicao { get; private set; }
     public bool Ativo { get; private set; }
 
+    public ICollection<Dispositivo> Dispositivos { get; private set; } = [];
+
     protected AlvoAvaliacao() { }
 
     public AlvoAvaliacao(Guid unidadeId, string titulo, string subtitulo, string? imagemUrl, TipoAlvo tipo, int ordemExibicao)
