@@ -15,7 +15,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddScoped<IVotoRepository, VotoRepository>();
 builder.Services.AddScoped<IFeedbackService, FeedbackService>();
-
+builder.Services.AddScoped<ICadastroService, CadastroService>();
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
