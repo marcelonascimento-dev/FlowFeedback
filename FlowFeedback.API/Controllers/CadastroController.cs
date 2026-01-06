@@ -70,4 +70,20 @@ public class CadastroController : ControllerBase
             return BadRequest(new { erro = ex.Message });
         }
     }
+
+    [HttpPost("alvo-dispositivo")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CadastrarAlvoDispositivo([FromBody] CreateAlvoDispositivoDto dto)
+    {
+        try
+        {
+            await _cadastroService.VincularAlvoAvaliacaoADispositivoAsync(dto.DispositivoId, dto.alvosId);
+            return CreatedAtAction(nameof(CadastrarAlvoDispositivo), new { dispositivoId = dto.DispositivoId }, null);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { erro = ex.Message });
+        }
+    }
 }

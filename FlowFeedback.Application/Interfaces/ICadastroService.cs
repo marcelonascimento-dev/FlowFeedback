@@ -9,4 +9,5 @@ public interface ICadastroService
     Task<Unidade> CadastrarUnidadeAsync(CreateUnidadeDto dto);
     Task<Dispositivo> CadastrarDispositivoAsync(CreateDispositivoDto dto);
     Task<AlvoAvaliacao> CadastrarAlvoAvaliacaoAsync(CreateAlvoAvaliacaoDto dto);
+    Task VincularAlvoAvaliacaoADispositivoAsync(string dispositivoId, IEnumerable<string> alvosId);
 }

@@ -59,4 +59,29 @@ public class CadastroService(AppDbContext context) : ICadastroService
         await _context.SaveChangesAsync();
         return alvo;
     }
+
+    public async Task VincularAlvoAvaliacaoADispositivoAsync(string dispositivoId, IEnumerable<string> alvosId)
+    {
+        var dispositivo = await _context.Dispositivos
+            .Include(d => d.Alvos)
+            .FirstOrDefaultAsync(d => d.Id == dispositivoId);
+
+        if (dispositivo == null)
+        {
+            throw new Exception("Dispositivo não encontrado.");
+        }
+
+        dispositivo.Alvos.Clear();
+
+        var novosAlvos = await _context.AlvosAvaliacao
+            .Where(a => alvosId.Contains(a.Id.ToString()))
+            .ToListAsync();
+
+        foreach (var alvo in novosAlvos)
+        {
+            dispositivo.Alvos.Add(alvo);
+        }
+
+        await _context.SaveChangesAsync();
+    }
 }

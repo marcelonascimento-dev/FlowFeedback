@@ -10,3 +10,5 @@ public record CreateUnidadeDto([Required] Guid TenantId, [Required] string Nome,
 public record CreateDispositivoDto([Required] Guid UnidadeId,[Required] Guid TenantId,[Required] string Identificador, [Required] string Nome);
 
 public record CreateAlvoAvaliacaoDto([Required] Guid UnidadeId, [Required] TipoAlvo Tipo, [Required] string Titulo, string Subtitulo, string? ImagemUrl, int? Ordem);
+
+public record CreateAlvoDispositivoDto([Required] string DispositivoId, IEnumerable<string> alvosId);
