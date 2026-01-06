@@ -9,6 +9,14 @@ public static class MauiProgram
     public static MauiApp CreateMauiApp()
     {
         var builder = MauiApp.CreateBuilder();
+
+        AppDomain.CurrentDomain.UnhandledException += (s, e) => { /* Silêncio */ };
+
+        TaskScheduler.UnobservedTaskException += (s, e) =>
+        {
+            e.SetObserved(); // Impede o fechamento por erro em Tasks assíncronas
+        };
+
         builder
             .UseMauiApp<App>()
             .UseMauiCommunityToolkit()
