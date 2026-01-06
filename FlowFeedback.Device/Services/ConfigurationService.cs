@@ -1,4 +1,5 @@
 ﻿using FlowFeedback.Device.Interfaces;
+using FlowFeedback.Device.ViewModels;
 
 namespace FlowFeedback.Device.Services;
 
@@ -38,5 +39,20 @@ public class ConfigurationService
             }
             return id;
         }
+    }
+
+    public ConfigResponse? Configuracao { get; private set; }
+
+    public bool IsLoaded => Configuracao != null;
+
+    public void SetConfig(ConfigResponse config)
+    {
+        Configuracao = config;
+        TenantId = config.TenantId;
+    }
+    public void Reset()
+    {
+        Configuracao = null;
+        TenantId = Guid.Empty;
     }
 }

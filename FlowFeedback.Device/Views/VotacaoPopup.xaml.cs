@@ -1,3 +1,4 @@
+using FlowFeedback.Device.ViewModels;
 using System.ComponentModel;
 
 namespace FlowFeedback.Device.Views;
@@ -27,8 +28,6 @@ public partial class VotacaoPopup : CommunityToolkit.Maui.Views.Popup
 
             if (vm.MostrarTags)
             {
-                await ViewNotas.FadeToAsync(0, 200, Easing.CubicIn);
-
                 await Task.WhenAll(
                     ViewTags.FadeToAsync(1, 400, Easing.CubicOut),
                     ViewTags.TranslateToAsync(0, 0, 400, Easing.CubicOut)

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:FlowFeedback.Device.ViewModels"
+             x:Class="FlowFeedback.Device.Views.AgradecimentoPage"
+             x:DataType="viewmodels:AgradecimentoViewModel"
+             BackgroundColor="#2ECC71"
+             Shell.NavBarIsVisible="False">
+    <VerticalStackLayout VerticalOptions="Center"
+                         HorizontalOptions="Center"
+                         Spacing="20">
+
+        <Label Text="✓"
+               FontSize="120"
+               TextColor="White"
+               HorizontalOptions="Center"/>
+
+        <Label Text="Obrigado!"
+               FontSize="48"
+               FontAttributes="Bold"
+               TextColor="White"
+               HorizontalOptions="Center"/>
+
+        <Label Text="Sua opinião é muito importante para nós."
+               FontSize="24"
+               HorizontalTextAlignment="Center"
+               TextColor="White"
+               Margin="20,0"/>
+
+    </VerticalStackLayout>
+</ContentPage>

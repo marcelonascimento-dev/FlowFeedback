@@ -2,6 +2,7 @@
 using FlowFeedback.Device;
 using FlowFeedback.Device.Services;
 using FlowFeedback.Device.ViewModels;
+using FlowFeedback.Device.Views;
 using UraniumUI;
 
 public static class MauiProgram
@@ -37,6 +38,10 @@ public static class MauiProgram
         builder.Services.AddSingleton<DatabaseService>();
         builder.Services.AddTransient<MainViewModel>();
         builder.Services.AddSingleton<MainPage>();
+        builder.Services.AddTransient<VotacaoPage>();
+        builder.Services.AddTransient<VotacaoViewModel>();
+        builder.Services.AddTransient<AgradecimentoPage>();
+        builder.Services.AddTransient<AgradecimentoViewModel>();
         builder.Services.AddSingleton(new HttpClient { BaseAddress = new Uri(AppConfig.BaseApiUrl) });
 
         return builder.Build();

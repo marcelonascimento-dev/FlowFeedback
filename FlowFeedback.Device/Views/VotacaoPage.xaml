@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             xmlns:viewmodels="clr-namespace:FlowFeedback.Device.ViewModels"
+             xmlns:models="clr-namespace:FlowFeedback.Device.Models"
+             x:Class="FlowFeedback.Device.Views.VotacaoPage"
+             x:DataType="viewmodels:VotacaoViewModel"
+             BackgroundColor="#F5F5F5"
+             Shell.NavBarIsVisible="False">
+    <Border BackgroundColor="White" 
+            Padding="20" 
+            StrokeThickness="0"
+            WidthRequest="700"
+            VerticalOptions="Center"
+            HorizontalOptions="Center">
+
+        <Border.StrokeShape>
+            <RoundRectangle CornerRadius="40" />
+        </Border.StrokeShape>
+
+        <Border.Shadow>
+            <Shadow Brush="Black" Opacity="0.1" Radius="10" Offset="0,5"/>
+        </Border.Shadow>
+
+        <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" VerticalOptions="Fill">
+
+            <Grid WidthRequest="80" HeightRequest="80" HorizontalOptions="Center" Margin="0,0,0,10"
+                  IsVisible="{Binding ImagemUrl, Converter={toolkit:IsStringNotNullOrEmptyConverter}}">
+                <Border Stroke="{StaticResource Primary}" StrokeThickness="2" StrokeShape="RoundRectangle 40"/>
+                <Image Source="{Binding ImagemUrl}" Aspect="AspectFill">
+                    <Image.Clip>
+                        <EllipseGeometry Center="40,40" RadiusX="40" RadiusY="40"/>
+                    </Image.Clip>
+                </Image>
+            </Grid>
+
+            <Label Grid.Row="1" Text="{Binding Titulo}" FontSize="24" FontAttributes="Bold" 
+                   HorizontalOptions="Center" TextColor="#2C3E50" Margin="0,0,0,8"/>
+
+            <Label Grid.Row="2" Text="Como foi seu atendimento?" FontSize="18" 
+                   HorizontalOptions="Center" TextColor="Gray" Margin="0,0,0,20"/>
+
+            <Grid Grid.Row="3">
+
+                <VerticalStackLayout IsVisible="{Binding MostrarNotas}" VerticalOptions="Center">
+                    <FlexLayout BindableLayout.ItemsSource="{Binding OpcoesAvaliacao}"
+                                Wrap="NoWrap" JustifyContent="Center" AlignItems="Center">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="models:OpcaoAvaliacao">
+                                <Border StrokeShape="RoundRectangle 10" StrokeThickness="0" BackgroundColor="Transparent"
+                                        Padding="10" Margin="5" WidthRequest="100">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:VotacaoViewModel}}, Path=RegistrarVotoCommand}"
+                                                              CommandParameter="{Binding .}"/>
+                                    </Border.GestureRecognizers>
+                                    <VisualStateManager.VisualStateGroups>
+                                        <VisualStateGroup Name="CommonStates">
+                                            <VisualState Name="Normal" />
+                                            <VisualState Name="Pressed">
+                                                <VisualState.Setters>
+                                                    <Setter Property="Scale" Value="0.9" />
+                                                </VisualState.Setters>
+                                            </VisualState>
+                                        </VisualStateGroup>
+                                    </VisualStateManager.VisualStateGroups>
+                                    <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
+                                        <Label Text="{Binding Emoji}" FontSize="50" HorizontalOptions="Center"/>
+                                        <Label Text="{Binding Descricao}" TextColor="{Binding Cor}" FontSize="14" FontAttributes="Bold" HorizontalOptions="Center"/>
+                                    </VerticalStackLayout>
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </FlexLayout>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout IsVisible="{Binding MostrarTags}" VerticalOptions="Center" Spacing="16">
+                    <Label Text="Qual o principal motivo?" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center"/>
+                    <FlexLayout BindableLayout.ItemsSource="{Binding TagsAtuais}" Wrap="Wrap" JustifyContent="Center" MaximumWidthRequest="520">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="models:FeedbackTag">
+                                <Button Text="{Binding Nome}" HeightRequest="56" Padding="20,0" CornerRadius="28" Margin="6" FontSize="16"
+                                        BackgroundColor="#F2F2F2" TextColor="#2C3E50"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:VotacaoViewModel}}, Path=FinalizarComTagCommand}"
+                                        CommandParameter="{Binding .}"/>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </FlexLayout>
+                    <Label Text="Pular e finalizar" FontSize="14" TextColor="Gray" TextDecorations="Underline" HorizontalOptions="Center">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding PularTagsCommand}" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                </VerticalStackLayout>
+            </Grid>
+
+            <Button Grid.Row="4" Text="CANCELAR" Command="{Binding VoltarCommand}"
+                    BackgroundColor="Transparent" TextColor="#E74C3C" FontAttributes="Bold" FontSize="14"
+                    HorizontalOptions="Center" Margin="0,25,0,5"/>
+        </Grid>
+    </Border>
+</ContentPage>

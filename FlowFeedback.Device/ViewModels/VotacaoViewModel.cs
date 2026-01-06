@@ -4,24 +4,28 @@ using CommunityToolkit.Mvvm.Messaging;
 using FlowFeedback.Device.Messages;
 using FlowFeedback.Device.Models;
 using FlowFeedback.Device.Services;
-using FlowFeedback.Domain.Enums; // Certifique-se de ter o enum NivelSatisfacao aqui
+using FlowFeedback.Device.Views;
+using FlowFeedback.Domain.Enums;
 using System.Collections.ObjectModel;
 using System.Text.Json;
 
 namespace FlowFeedback.Device.ViewModels;
 
-public partial class VotacaoPopupViewModel : ObservableObject
+public partial class VotacaoViewModel : ObservableObject, IQueryAttributable
 {
-    private readonly AlvoDto _alvo;
     private readonly DatabaseService _dbService;
-    private readonly CommunityToolkit.Maui.Views.Popup _popup;
-    private readonly CancellationTokenSource _cts = new();
     private Dictionary<string, CategoriaTags> _mapaTags;
     private int _notaSelecionada;
 
-    public string Titulo => _alvo.Titulo;
+    // Propriedade que será preenchida via navegação
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Titulo))]
+    [NotifyPropertyChangedFor(nameof(ImagemUrl))]
+    private AlvoDto _alvo;
 
-    public string ImagemUrl => _alvo.ImagemUrl;
+    // Wrappers para a View
+    public string Titulo => Alvo?.Titulo;
+    public string ImagemUrl => Alvo?.ImagemUrl ?? string.Empty;
 
     public ObservableCollection<OpcaoAvaliacao> OpcoesAvaliacao { get; } = new();
 
@@ -32,25 +36,21 @@ public partial class VotacaoPopupViewModel : ObservableObject
     private bool _mostrarTags = false;
 
     [ObservableProperty]
-    private bool _mostrarAgradecimento = false;
-
-    [ObservableProperty]
     private List<FeedbackTag> _tagsAtuais;
 
-    [ObservableProperty]
-    private Color _corFundo = Colors.White;
-
-    public VotacaoPopupViewModel(AlvoDto alvo, DatabaseService dbService, CommunityToolkit.Maui.Views.Popup popup)
+    public VotacaoViewModel(DatabaseService dbService)
     {
-        _alvo = alvo;
         _dbService = dbService;
-        _popup = popup;
-
-        // Inicializa as opções de emoji
         CarregarOpcoesAvaliacao();
-
         _ = CarregarTagsDoJson();
-        IniciarTimerAutoFechamento();
+    }
+
+    public void ApplyQueryAttributes(IDictionary<string, object> query)
+    {
+        if (query.TryGetValue("Alvo", out var alvoObj) && alvoObj is AlvoDto alvo)
+        {
+            Alvo = alvo;
+        }
     }
 
     private void CarregarOpcoesAvaliacao()
@@ -58,7 +58,7 @@ public partial class VotacaoPopupViewModel : ObservableObject
         OpcoesAvaliacao.Clear();
         OpcoesAvaliacao.Add(new OpcaoAvaliacao { Nivel = NivelSatisfacao.MuitoInsatisfeito, Emoji = "😡", Descricao = "Péssimo", Cor = Colors.Red });
         OpcoesAvaliacao.Add(new OpcaoAvaliacao { Nivel = NivelSatisfacao.Insatisfeito, Emoji = "🙁", Descricao = "Ruim", Cor = Colors.Orange });
-        OpcoesAvaliacao.Add(new OpcaoAvaliacao { Nivel = NivelSatisfacao.Neutro, Emoji = "😐", Descricao = "Regular", Cor = Color.FromArgb("#FFD700") }); // Gold
+        OpcoesAvaliacao.Add(new OpcaoAvaliacao { Nivel = NivelSatisfacao.Neutro, Emoji = "😐", Descricao = "Regular", Cor = Color.FromArgb("#FFD700") });
         OpcoesAvaliacao.Add(new OpcaoAvaliacao { Nivel = NivelSatisfacao.Satisfeito, Emoji = "🙂", Descricao = "Bom", Cor = Colors.LightGreen });
         OpcoesAvaliacao.Add(new OpcaoAvaliacao { Nivel = NivelSatisfacao.MuitoSatisfeito, Emoji = "😍", Descricao = "Ótimo", Cor = Colors.Green });
     }
@@ -74,7 +74,7 @@ public partial class VotacaoPopupViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Erro ao carregar JSON: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Erro tags: {ex.Message}");
         }
     }
 
@@ -82,11 +82,11 @@ public partial class VotacaoPopupViewModel : ObservableObject
     private void RegistrarVoto(OpcaoAvaliacao opcao)
     {
         if (opcao == null) return;
-
         _notaSelecionada = opcao.Valor;
 
         bool isPositivo = _notaSelecionada >= 4;
-        string tipoChave = ((int)_alvo.Tipo).ToString();
+
+        string tipoChave = ((int)Alvo.Tipo).ToString();
 
         if (_mapaTags != null && _mapaTags.TryGetValue(tipoChave, out var categoria))
         {
@@ -116,7 +116,7 @@ public partial class VotacaoPopupViewModel : ObservableObject
         {
             await _dbService.SalvarVotoAsync(new VotoLocal
             {
-                AlvoId = _alvo.Id,
+                AlvoId = Alvo.Id,
                 Nota = nota,
                 TagMotivo = tag,
                 DataHora = DateTime.Now
@@ -124,41 +124,18 @@ public partial class VotacaoPopupViewModel : ObservableObject
 
             WeakReferenceMessenger.Default.Send(new VotoRegistradoMessage());
 
-            await FecharPopup();
-
-            await Shell.Current.GoToAsync(nameof(Views.AgradecimentoPage));
+            await Shell.Current.GoToAsync(nameof(AgradecimentoPage));
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Erro ao votar: {ex.Message}");
-            await FecharPopup();
+            await Voltar();
         }
     }
 
     [RelayCommand]
-    private async Task Fechar() => await FecharPopup();
-
-    private async Task FecharPopup()
+    private async Task Voltar()
     {
-        _cts.Cancel();
-        await MainThread.InvokeOnMainThreadAsync(async () =>
-        {
-            try
-            {
-                if (_popup != null) await _popup.CloseAsync();
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Popup CloseAsync error: {ex.Message}");
-            }
-        });
-    }
-
-    private void IniciarTimerAutoFechamento()
-    {
-        Task.Delay(TimeSpan.FromSeconds(20), _cts.Token).ContinueWith(async t =>
-        {
-            if (!t.IsCanceled) await FecharPopup();
-        });
+        await Shell.Current.GoToAsync("..");
     }
 }

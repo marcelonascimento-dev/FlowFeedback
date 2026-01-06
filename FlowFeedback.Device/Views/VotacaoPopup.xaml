@@ -7,7 +7,7 @@
                x:Class="FlowFeedback.Device.Views.VotacaoPopup"
                x:Name="Self">
 
-    <Border BackgroundColor="White" 
+    <Border BackgroundColor="{Binding CorFundo}"
             Padding="20" 
             StrokeThickness="0"
             WidthRequest="700"
@@ -18,133 +18,175 @@
             <RoundRectangle CornerRadius="40" />
         </Border.StrokeShape>
 
-        <Grid RowDefinitions="Auto, *, Auto" VerticalOptions="Fill">
+        <Grid RowDefinitions="Auto,Auto,Auto,*,Auto"
+              VerticalOptions="Fill">
 
-            <Label Grid.Row="0" 
-                   Text="{Binding Titulo}" 
-                   FontSize="24" 
-                   FontAttributes="Bold" 
-                   HorizontalOptions="Center" 
+            <Grid WidthRequest="80"
+                  HeightRequest="80"
+                  HorizontalOptions="Center"
+                  Margin="0,0,0,10"
+                  IsVisible="{Binding ImagemUrl, Converter={toolkit:IsStringNotNullOrEmptyConverter}}">
+
+                <Border Stroke="{StaticResource Primary}"
+                        StrokeThickness="2"
+                        StrokeShape="RoundRectangle 40"/>
+
+                <Image Source="{Binding ImagemUrl}"
+                       Aspect="AspectFill">
+                    <Image.Clip>
+                        <EllipseGeometry Center="40,40"
+                                         RadiusX="40"
+                                         RadiusY="40"/>
+                    </Image.Clip>
+                </Image>
+            </Grid>
+
+            <Label Grid.Row="1"
+                   Text="{Binding Titulo}"
+                   FontSize="24"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
                    TextColor="#2C3E50"
-                   Margin="0,0,0,15"/>
+                   Margin="0,0,0,8"/>
 
-            <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Never">
-                <Grid>
-                    <VerticalStackLayout x:Name="ViewNotas"
-                                         Spacing="10" 
-                                         IsVisible="{Binding MostrarNotas}"
-                                         VerticalOptions="Center">
+            <Label Grid.Row="2"
+                   Text="Como foi seu atendimento?"
+                   FontSize="18"
+                   HorizontalOptions="Center"
+                   TextColor="Gray"
+                   Margin="0,0,0,20"/>
 
-                        <Label Text="Como foi seu atendimento?" 
-                               FontSize="18" 
-                               HorizontalOptions="Center" 
-                               TextColor="Gray"
-                               Margin="0,0,0,5"/>
+            <Grid Grid.Row="3">
 
-                        <FlexLayout BindableLayout.ItemsSource="{Binding OpcoesNps}" 
-                                    Wrap="Wrap" 
-                                    JustifyContent="Center" 
-                                    AlignContent="Center">
-                            <BindableLayout.ItemTemplate>
-                                <DataTemplate x:DataType="models:NpsOption">
-                                    <Button Text="{Binding Nota}" 
-                                            Command="{Binding Source={x:Reference Self}, Path=BindingContext.SelecionarNotaCommand}"
-                                            CommandParameter="{Binding .}"
-                                            WidthRequest="75" 
-                                            HeightRequest="75" 
-                                            CornerRadius="37" 
-                                            Margin="5"
-                                            FontSize="22" 
-                                            FontAttributes="Bold" 
-                                            BackgroundColor="{Binding Cor}" 
-                                            TextColor="White" />
-                                </DataTemplate>
-                            </BindableLayout.ItemTemplate>
-                        </FlexLayout>
-                    </VerticalStackLayout>
+                <VerticalStackLayout IsVisible="{Binding MostrarNotas}"
+                                     x:Name="ViewNotas"
+                                     VerticalOptions="Center">
 
-                    <VerticalStackLayout x:Name="ViewTags"
-                                         Spacing="15" 
-                                         IsVisible="{Binding MostrarTags}"
-                                         Opacity="0"
-                                         TranslationX="50"
-                                         VerticalOptions="Center">
+                    <FlexLayout BindableLayout.ItemsSource="{Binding OpcoesAvaliacao}"
+                                Wrap="NoWrap" 
+                                JustifyContent="Center"
+                                AlignItems="Center">
 
-                        <Label Text="Qual o principal motivo?" 
-                               FontSize="20" 
-                               HorizontalOptions="Center" 
-                               FontAttributes="Bold"
-                               TextColor="#34495E"/>
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="models:OpcaoAvaliacao">
 
-                        <FlexLayout BindableLayout.ItemsSource="{Binding TagsAtuais}" 
-                                    Wrap="Wrap" 
-                                    JustifyContent="Center">
-                            <BindableLayout.ItemTemplate>
-                                <DataTemplate x:DataType="models:FeedbackTag">
-                                    <Button Text="{Binding Nome}" 
-                                            Command="{Binding Source={x:Reference Self}, Path=BindingContext.FinalizarComTagCommand}"
-                                            CommandParameter="{Binding .}"
-                                            Margin="4" 
-                                            Padding="20,0" 
-                                            HeightRequest="60" 
-                                            CornerRadius="30"
-                                            FontSize="16"
-                                            BackgroundColor="#F2F2F2" 
-                                            TextColor="#2C3E50"/>
-                                </DataTemplate>
-                            </BindableLayout.ItemTemplate>
-                        </FlexLayout>
+                                <Border StrokeShape="RoundRectangle 10"
+                                        StrokeThickness="0"
+                                        BackgroundColor="Transparent"
+                                        Padding="10"
+                                        Margin="5"
+                                        WidthRequest="100">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding Source={x:Reference Self}, Path=BindingContext.RegistrarVotoCommand}"
+                                                              CommandParameter="{Binding .}"/>
+                                    </Border.GestureRecognizers>
 
-                        <Label Text="Pular e finalizar" TextColor="Gray" FontSize="14" TextDecorations="Underline" HorizontalOptions="Center">       
-                            <Label.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding PularTagsCommand}" />
-                            </Label.GestureRecognizers>
-                        </Label>
-                    </VerticalStackLayout>
-                    <VerticalStackLayout x:Name="ViewSucesso"
-                     Grid.Row="1" 
-                     Spacing="20" 
-                     IsVisible="{Binding MostrarAgradecimento}"
-                     VerticalOptions="Center">
+                                    <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
+                                        <Label Text="{Binding Emoji}" 
+                                               FontSize="50"
+                                               HorizontalOptions="Center"/>
 
-                                    <Label Text="✓" 
-                       FontSize="80" 
-                       TextColor="{DynamicResource Primary}" 
-                       HorizontalOptions="Center" 
-                       FontAttributes="Bold"/>
+                                        <Label Text="{Binding Descricao}"
+                                               TextColor="{Binding Cor}"
+                                               FontSize="14"
+                                               FontAttributes="Bold"
+                                               HorizontalOptions="Center"
+                                               HorizontalTextAlignment="Center"/>
+                                    </VerticalStackLayout>
 
-                                    <Label Text="Obrigado!" 
-                       FontSize="32" 
-                       FontAttributes="Bold" 
-                       HorizontalOptions="Center" 
-                       TextColor="#2C3E50"/>
+                                    <VisualStateManager.VisualStateGroups>
+                                        <VisualStateGroup Name="CommonStates">
+                                            <VisualState Name="Normal" />
+                                            <VisualState Name="Pressed">
+                                                <VisualState.Setters>
+                                                    <Setter Property="Scale" Value="0.9" />
+                                                    <Setter Property="Opacity" Value="0.7" />
+                                                </VisualState.Setters>
+                                            </VisualState>
+                                        </VisualStateGroup>
+                                    </VisualStateManager.VisualStateGroups>
+                                </Border>
 
-                                    <Label Text="Sua opinião é muito importante para nós." 
-                       FontSize="18" 
-                       HorizontalOptions="Center" 
-                       HorizontalTextAlignment="Center"
-                       TextColor="Gray"
-                       Margin="20,0"/>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </FlexLayout>
+                </VerticalStackLayout>
 
-                                    <BoxView HeightRequest="4" 
-                         WidthRequest="100" 
-                         Color="{DynamicResource Primary}" 
-                         HorizontalOptions="Center" 
-                         CornerRadius="2"/>
-                    </VerticalStackLayout>
+                <VerticalStackLayout IsVisible="{Binding MostrarTags}"
+                                     x:Name="ViewTags"
+                                     VerticalOptions="Center"
+                                     Spacing="16">
 
-                </Grid>
-            </ScrollView>
+                    <Label Text="Qual o principal motivo?"
+                           FontSize="20"
+                           FontAttributes="Bold"
+                           HorizontalOptions="Center"/>
 
-            <Button Grid.Row="2" 
-                    Text="CANCELAR" 
+                    <FlexLayout BindableLayout.ItemsSource="{Binding TagsAtuais}"
+                                Wrap="Wrap"
+                                JustifyContent="Center"
+                                MaximumWidthRequest="520">
+
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="models:FeedbackTag">
+                                <Button Text="{Binding Nome}"
+                                        HeightRequest="56"
+                                        Padding="20,0"
+                                        CornerRadius="28"
+                                        Margin="6"
+                                        FontSize="16"
+                                        BackgroundColor="#F2F2F2"
+                                        TextColor="#2C3E50"
+                                        Command="{Binding Source={x:Reference Self}, Path=BindingContext.FinalizarComTagCommand}"
+                                        CommandParameter="{Binding .}"/>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </FlexLayout>
+
+                    <Label Text="Pular e finalizar"
+                           FontSize="14"
+                           TextColor="Gray"
+                           TextDecorations="Underline"
+                           HorizontalOptions="Center">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding PularTagsCommand}" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout IsVisible="{Binding MostrarAgradecimento}"
+                                     VerticalOptions="Center"
+                                     x:Name="ViewSucesso"
+                                     Spacing="20">
+
+                    <Label Text="✓"
+                           FontSize="80"
+                           TextColor="{DynamicResource Primary}"
+                           HorizontalOptions="Center"/>
+
+                    <Label Text="Obrigado!"
+                           FontSize="32"
+                           FontAttributes="Bold"
+                           HorizontalOptions="Center"/>
+
+                    <Label Text="Sua opinião é muito importante para nós."
+                           FontSize="18"
+                           HorizontalTextAlignment="Center"
+                           TextColor="Gray"
+                           Margin="20,0"/>
+                </VerticalStackLayout>
+            </Grid>
+
+            <Button Grid.Row="4"
+                    Text="CANCELAR"
                     Command="{Binding FecharCommand}"
-                    BackgroundColor="Transparent" 
-                    TextColor="#E74C3C" 
-                    FontAttributes="Bold" 
+                    BackgroundColor="Transparent"
+                    TextColor="#E74C3C"
+                    FontAttributes="Bold"
                     FontSize="14"
                     HorizontalOptions="Center"
-                    Margin="0,15,0,0"/>
+                    Margin="0,25,0,5"/>
         </Grid>
+
     </Border>
 </toolkit:Popup>
