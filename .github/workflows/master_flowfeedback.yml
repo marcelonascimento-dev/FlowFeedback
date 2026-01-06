@@ -23,10 +23,6 @@ jobs:
         with:
           dotnet-version: '10.x'
 
-      # CORREÇÃO AQUI: 
-      # 1. Removi o passo "Build with dotnet" separado (o publish já faz o build).
-      # 2. Apontei o publish DIRETAMENTE para o .csproj da API.
-      # Isso evita que o runner tente compilar o projeto Mobile/MAUI e falhe.
       - name: dotnet publish
         run: dotnet publish FlowFeedback.API/FlowFeedback.API.csproj -c Release -o ${{env.DOTNET_ROOT}}/myapp
 
@@ -63,3 +59,4 @@ jobs:
           app-name: 'flowfeedback'
           slot-name: 'Production'
           package: .
+
