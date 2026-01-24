@@ -1,41 +1,67 @@
 ﻿using FlowFeedback.Application.DTOs;
 using FlowFeedback.Application.Interfaces;
-using FlowFeedback.Domain.Entities;
+using FlowFeedback.Application.Mappings;
 using FlowFeedback.Domain.Interfaces;
-using FlowFeedback.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Logging;
 
 namespace FlowFeedback.Application.Services;
 
-public class FeedbackService : IFeedbackService
+public class FeedbackService(
+    IDispositivoRepository dispositivoRepository,
+    IVotoRepository votoRepository,
+    IDistributedCache cache,
+    ILogger<FeedbackService> logger) : IFeedbackService
 {
-    private readonly IVotoRepository _votoRepository;
-    private readonly AppDbContext _context;
-
-    public FeedbackService(IVotoRepository votoRepository, AppDbContext context)
+    public async Task ProcessarPacoteVotos(PacoteVotosDto pacote)
     {
-        _votoRepository = votoRepository;
-        _context = context;
-    }
+        var dispositivo = await dispositivoRepository.GetByIdentifierAsync(pacote.DeviceId);
 
-    public async Task ProcessarVotosDoTabletAsync(Guid tenantId, string deviceId, List<RegistrarVotoDto> votosDto)
-    {
-        var dispositivo = await _context.Dispositivos.AsNoTracking()
-            .FirstOrDefaultAsync(d => d.Id == deviceId && d.TenantId == tenantId);
+        if (dispositivo == null || !dispositivo.Ativo)
+        {
+            logger.LogWarning("Dispositivo desconhecido ou inativo: {Identifier}", pacote.DeviceId);
+            return;
+        }
 
-        if (dispositivo == null)
-            throw new InvalidOperationException("Dispositivo não encontrado ou inválido para o tenant informado.");
+        var votosNaoProcessadosRecentemente = new List<RegistrarVotoDto>();
 
-        var entidades = votosDto.Select(dto => new Voto(
-            tenantId,
-            dispositivo.UnidadeId,
-            deviceId,
-            dto.AlvoAvaliacaoId,
-            dto.Nota,
-            dto.DataHora,
-            dto.TagMotivo
-        )).ToList();
+        foreach (var voto in pacote.Votos)
+        {
+            var cacheKey = $"voto_proc:{voto.Id}";
+            var processado = await cache.GetAsync(cacheKey);
+            if (processado == null)
+                votosNaoProcessadosRecentemente.Add(voto);
+        }
 
-        await _votoRepository.AdicionarLoteAsync(entidades);
+        if (votosNaoProcessadosRecentemente.Count == 0)
+        {
+            logger.LogInformation("Pacote ignorado: Todos os votos já foram processados recentemente (Cache Hit).");
+            return;
+        }
+
+        var idsParaChecar = votosNaoProcessadosRecentemente.Select(v => v.Id).ToList();
+        var idsExistentesNoBanco = await votoRepository.GetExistingIdsAsync(idsParaChecar);
+
+        var votosParaSalvar = votosNaoProcessadosRecentemente
+            .Where(dto => !idsExistentesNoBanco.Contains(dto.Id))
+            .Select(dto => dto.ToEntity(dispositivo))
+            .ToList();
+
+        if (votosParaSalvar.Any())
+        {
+            await votoRepository.AdicionarLoteAsync(votosParaSalvar);
+
+            var cacheOptions = new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24)
+            };
+
+            var tasksCache = votosParaSalvar.Select(v =>
+                cache.SetStringAsync($"voto_proc:{v.Id}", "1", cacheOptions));
+
+            await Task.WhenAll(tasksCache);
+
+            logger.LogInformation("{Qtd} novos votos inseridos e cacheados.", votosParaSalvar.Count);
+        }
     }
 }
