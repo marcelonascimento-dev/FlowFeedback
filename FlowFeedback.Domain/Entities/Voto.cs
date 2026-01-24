@@ -1,4 +1,5 @@
-﻿using FlowFeedback.Domain.Enums;
+﻿using System.Collections;
+using FlowFeedback.Domain.Enums;
 
 namespace FlowFeedback.Domain.Entities;
 
@@ -6,12 +7,12 @@ public class Voto
 {
     public Guid Id { get; private set; }
     public Guid TenantId { get; private set; }
-    public Guid UnidadeId { get; private set; } // Nova Propriedade
+    public Guid UnidadeId { get; private set; }
     public string DeviceId { get; private set; }
     public Guid AlvoAvaliacaoId { get; private set; }
     public int Nota { get; private set; }
     public string? Comentario { get; private set; }
-    public string? TagMotivo { get; private set; }
+    public IEnumerable<string>? Tags { get; private set; }
     public DateTime DataHoraVoto { get; private set; }
     public DateTime DataHoraSincronizacao { get; private set; }
 
@@ -24,7 +25,7 @@ public class Voto
 
     protected Voto() { }
 
-    public Voto(Guid id, Guid tenantId, Guid unidadeId, string deviceId, Guid alvoAvaliacaoId, int nota, DateTime dataHoraVoto, string? tagMotivo = null, string? comentario = null)
+    public Voto(Guid id, Guid tenantId, Guid unidadeId, string deviceId, Guid alvoAvaliacaoId, int nota, DateTime dataHoraVoto, IEnumerable<string>? tags = null, string? comentario = null)
     {
         if (tenantId == Guid.Empty) throw new ArgumentException("TenantId inválido");
         if (unidadeId == Guid.Empty) throw new ArgumentException("UnidadeId inválida");
@@ -37,7 +38,7 @@ public class Voto
         AlvoAvaliacaoId = alvoAvaliacaoId;
         Nota = nota;
         DataHoraVoto = dataHoraVoto;
-        TagMotivo = tagMotivo;
+        Tags = tags;
         DataHoraSincronizacao = DateTime.UtcNow;
         Comentario = comentario;
     }

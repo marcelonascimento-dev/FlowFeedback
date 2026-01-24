@@ -51,7 +51,7 @@ public class RelatorioController : ControllerBase
     private static ResumoNpsDto ProcessarMetricas(string nome, List<Domain.Entities.Voto> todosVotos)
     {
         // Filtro inteligente: desconsidera nota <= 2 sem comentário (ruído)
-        var validos = todosVotos.Where(v => !(v.Nota <= 2 && string.IsNullOrEmpty(v.TagMotivo))).ToList();
+        var validos = todosVotos.Where(v => !(v.Nota <= 2 && v.Tags?.Any() == false)).ToList();
 
         int total = validos.Count;
         if (total == 0) return new ResumoNpsDto(nome, 0, 0, 0, 0, 0, 0, 0, 0);
