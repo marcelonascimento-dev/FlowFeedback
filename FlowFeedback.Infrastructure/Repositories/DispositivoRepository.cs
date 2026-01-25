@@ -14,14 +14,14 @@ public class DispositivoRepository(IDbConnectionFactory dbFactory) : IDispositiv
         FROM Dispositivos 
         WHERE Identificador = @Identificador";
 
-        using var db = dbFactory.CreateConnection();
+        using var db = dbFactory.CreateTenantConnection();
 
         return await db.QueryFirstOrDefaultAsync<Dispositivo>(SqlSelectByIdentifier, new { Identificador = deviceIdentifier });
     }
 
     public async Task<Dispositivo> AddDispositivoAsync(Dispositivo dispositivo)
     {
-        using var db = dbFactory.CreateConnection();
+        using var db = dbFactory.CreateTenantConnection();
         var sql = @"INSERT INTO Dispositivos (Id, UnidadeId, TenantId, Nome, Identificador, Ativo, DataCriacao) 
                     VALUES (@Id, @UnidadeId, @TenantId, @Nome, @Identificador, @Ativo, @DataCriacao)";
 
@@ -32,13 +32,13 @@ public class DispositivoRepository(IDbConnectionFactory dbFactory) : IDispositiv
     public async Task<bool> DispositivoExisteAsync(string identificador)
     {
         string SqlCheckExists = "SELECT CAST(COUNT(1) AS BIT) FROM Dispositivos WHERE Identificador = @Identificador";
-        using var db = dbFactory.CreateConnection();
+        using var db = dbFactory.CreateTenantConnection();
         return await db.ExecuteScalarAsync<bool>(SqlCheckExists, new { Identificador = identificador });
     }
 
     public async Task<Dispositivo?> GetDispositivoWithAlvosAsync(Guid id)
     {
-        using var db = dbFactory.CreateConnection();
+        using var db = dbFactory.CreateTenantConnection();
         var sql = @"
             SELECT d.*, a.* FROM Dispositivos d
             LEFT JOIN DispositivoAlvos da ON d.Id = da.DispositivoId
@@ -74,7 +74,7 @@ public class DispositivoRepository(IDbConnectionFactory dbFactory) : IDispositiv
 
     public async Task UpdateDispositivoAsync(Dispositivo dispositivo)
     {
-        using var db = dbFactory.CreateConnection();
+        using var db = dbFactory.CreateTenantConnection();
         db.Open();
         using var trans = db.BeginTransaction();
 

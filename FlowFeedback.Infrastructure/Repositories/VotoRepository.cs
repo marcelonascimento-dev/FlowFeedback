@@ -9,7 +9,7 @@ public class VotoRepository(IDbConnectionFactory dbFactory) : IVotoRepository
 {
     public async Task<HashSet<Guid>> GetExistingIdsAsync(IEnumerable<Guid> idsToCheck)
     {
-        using var db = dbFactory.CreateConnection();
+        using var db = dbFactory.CreateTenantConnection();
 
         var query = "SELECT Id FROM Votos WHERE Id IN @Ids";
 
@@ -19,7 +19,7 @@ public class VotoRepository(IDbConnectionFactory dbFactory) : IVotoRepository
 
     public async Task AdicionarLoteAsync(IEnumerable<Voto> votos)
     {
-        using var db = dbFactory.CreateConnection();
+        using var db = dbFactory.CreateTenantConnection();
 
         var sql = @"
             INSERT INTO Votos (Id, TenantId, UnidadeId, DispositivoId, Valor, Comentario, DataHora, DataProcessamento)

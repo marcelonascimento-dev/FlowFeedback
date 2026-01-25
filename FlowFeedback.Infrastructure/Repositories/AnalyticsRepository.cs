@@ -9,7 +9,7 @@ public class AnalyticsRepository(IDbConnectionFactory dbFactory) : IAnalyticsRep
 {
     public async Task<NpsScoreDto> GetNpsPeriodoAsync(Guid tenantId, DateTime inicio, DateTime fim)
     {
-        using var db = dbFactory.CreateConnection();
+        using var db = dbFactory.CreateTenantConnection();
 
         var sql = @"
             SELECT 
@@ -48,7 +48,7 @@ public class AnalyticsRepository(IDbConnectionFactory dbFactory) : IAnalyticsRep
 
     public async Task<IEnumerable<NpsEvolucaoDiariaDto>> GetEvolucaoNpsAsync(Guid tenantId, DateTime inicio, DateTime fim)
     {
-        using var db = dbFactory.CreateConnection();
+        using var db = dbFactory.CreateTenantConnection();
 
         var sql = @"
             SELECT 

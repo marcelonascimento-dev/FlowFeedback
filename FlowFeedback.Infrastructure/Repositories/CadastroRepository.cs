@@ -10,7 +10,7 @@ public class CadastroRepository(IDbConnectionFactory dbFactory) : ICadastroRepos
 {
     public async Task<Tenant> AddTenantAsync(Tenant tenant)
     {
-        using var db = dbFactory.CreateConnection();
+        using var db = dbFactory.CreateTenantConnection();
         var sql = @"INSERT INTO Tenants (Id, Nome, Documento, LogoUrl, CorPrimaria, CorSecundaria, Ativo, DataCriacao) 
                     VALUES (@Id, @Nome, @Documento, @LogoUrl, @CorPrimaria, @CorSecundaria, @Ativo, @DataCriacao)";
 
@@ -20,13 +20,13 @@ public class CadastroRepository(IDbConnectionFactory dbFactory) : ICadastroRepos
 
     public async Task<Tenant?> GetTenantByIdAsync(Guid id)
     {
-        using var db = dbFactory.CreateConnection();
+        using var db = dbFactory.CreateTenantConnection();
         return await db.QueryFirstOrDefaultAsync<Tenant>("SELECT * FROM Tenants WHERE Id = @Id", new { Id = id });
     }
 
     public async Task<Unidade> AddUnidadeAsync(Unidade unidade)
     {
-        using var db = dbFactory.CreateConnection();
+        using var db = dbFactory.CreateTenantConnection();
         var sql = @"INSERT INTO Unidades (Id, TenantId, Nome, Cidade, Endereco, LogoUrlOverride, CorPrimariaOverride, CorSecundariaOverride, Ativo) 
                     VALUES (@Id, @TenantId, @Nome, @Cidade, @Endereco, @LogoUrlOverride, @CorPrimariaOverride, @CorSecundariaOverride, @Ativo)";
 
@@ -36,7 +36,7 @@ public class CadastroRepository(IDbConnectionFactory dbFactory) : ICadastroRepos
 
     public async Task<Unidade?> GetUnidadeByIdAsync(Guid id)
     {
-        using var db = dbFactory.CreateConnection();
+        using var db = dbFactory.CreateTenantConnection();
         var sql = @"SELECT u.*, t.* FROM Unidades u 
                     INNER JOIN Tenants t ON u.TenantId = t.Id 
                     WHERE u.Id = @Id";
@@ -53,7 +53,7 @@ public class CadastroRepository(IDbConnectionFactory dbFactory) : ICadastroRepos
 
     public async Task<AlvoAvaliacao> AddAlvoAsync(AlvoAvaliacao alvo)
     {
-        using var db = dbFactory.CreateConnection();
+        using var db = dbFactory.CreateTenantConnection();
         var sql = @"INSERT INTO AlvosAvaliacao (Id, UnidadeId, TenantId, Nome, Subtitulo, ImagemUrl, Ordem, Tipo, Ativo) 
                     VALUES (@Id, @UnidadeId, @TenantId, @Nome, @Subtitulo, @ImagemUrl, @Ordem, @Tipo, @Ativo)";
 
@@ -63,7 +63,7 @@ public class CadastroRepository(IDbConnectionFactory dbFactory) : ICadastroRepos
 
     public async Task<AlvoAvaliacao?> GetAlvoByIdAsync(Guid id)
     {
-        using var db = dbFactory.CreateConnection();
+        using var db = dbFactory.CreateTenantConnection();
         return await db.QueryFirstOrDefaultAsync<AlvoAvaliacao>("SELECT * FROM AlvosAvaliacao WHERE Id = @Id", new { Id = id });
     }
 

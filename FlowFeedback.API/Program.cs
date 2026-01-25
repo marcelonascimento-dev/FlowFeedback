@@ -5,6 +5,7 @@ using FlowFeedback.Application.Services;
 using FlowFeedback.Domain.Interfaces;
 using FlowFeedback.Infrastructure.Data;
 using FlowFeedback.Infrastructure.Repositories;
+using FlowFeedback.Infrastructure.Security;
 using MassTransit;
 using Microsoft.Extensions.Caching.Distributed;
 using Scalar.AspNetCore;
@@ -39,6 +40,10 @@ else
         options.InstanceName = "FlowFeedback_";
     });
 }
+
+builder.Services.AddHttpContextAccessor();
+var masterKey = builder.Configuration["Crypto:MasterKey"];
+builder.Services.AddSingleton<ICryptoService>(new CryptoService(masterKey));
 
 builder.Services.AddScoped<IVotoRepository, VotoRepository>();
 builder.Services.AddScoped<ICadastroRepository, CadastroRepository>();
