@@ -3,6 +3,7 @@ using FlowFeedback.API.Endpoints;
 using FlowFeedback.Application.Interfaces;
 using FlowFeedback.Application.Services;
 using FlowFeedback.Domain.Interfaces;
+using FlowFeedback.Domain.Repositories;
 using FlowFeedback.Infrastructure.Data;
 using FlowFeedback.Infrastructure.Repositories;
 using FlowFeedback.Infrastructure.Security;
@@ -48,6 +49,9 @@ builder.Services.AddSingleton<ICryptoService>(new CryptoService(masterKey));
 builder.Services.AddScoped<IVotoRepository, VotoRepository>();
 builder.Services.AddScoped<ICadastroRepository, CadastroRepository>();
 builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
+builder.Services.AddScoped<IDeviceMasterRepository, DeviceMasterRepository>();
+builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+builder.Services.AddScoped<IDeviceMasterRepository, DeviceMasterRepository>();
 
 builder.Services.AddScoped<DispositivoRepository>();
 builder.Services.AddScoped<IDispositivoRepository>(provider =>
@@ -58,6 +62,8 @@ builder.Services.AddScoped<IDispositivoRepository>(provider =>
 
 builder.Services.AddScoped<IFeedbackService, FeedbackService>();
 builder.Services.AddScoped<ICadastroService, CadastroService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IDeviceService, DeviceService>();  
 
 var app = builder.Build();
 
@@ -75,6 +81,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 // Mapeamento das Minimal APIs
+app.MapAuthEndpoints();
 app.MapCadastroEndpoints();
 app.MapSyncEndpoints();
 
