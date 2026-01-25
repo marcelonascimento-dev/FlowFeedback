@@ -4,28 +4,18 @@ namespace FlowFeedback.Domain.Entities;
 
 public class AlvoAvaliacao
 {
-    public Guid Id { get; private set; }
-    public Guid UnidadeId { get; private set; }
-    public string Titulo { get; private set; }
-    public string Subtitulo { get; private set; }
-    public string? ImagemUrl { get; private set; }
-    public TipoAlvo Tipo { get; private set; }
-    public int OrdemExibicao { get; private set; }
-    public bool Ativo { get; private set; }
+    public Guid Id { get; set; }
+    public Guid UnidadeId { get; set; }
+    public Guid TenantId { get; set; }
 
-    public ICollection<Dispositivo> Dispositivos { get; private set; } = [];
+    public string Nome { get; set; }
+    public string? Subtitulo { get; set; }
+    public string? ImagemUrl { get; set; }
+    public int Ordem { get; set; }
 
-    protected AlvoAvaliacao() { }
+    public TipoAlvo Tipo { get; set; }
+    public bool Ativo { get; set; }
 
-    public AlvoAvaliacao(Guid unidadeId, string titulo, string subtitulo, string? imagemUrl, TipoAlvo tipo, int ordemExibicao)
-    {
-        Id = Guid.NewGuid();
-        UnidadeId = unidadeId;
-        Titulo = titulo;
-        Subtitulo = subtitulo;
-        ImagemUrl = imagemUrl;
-        Tipo = tipo;
-        OrdemExibicao = ordemExibicao;
-        Ativo = true;
-    }
+    // Relacionamento N:N com Dispositivos (precisa existir na base)
+    public ICollection<Dispositivo> Dispositivos { get; set; } = [];
 }

@@ -1,50 +1,30 @@
-﻿using FlowFeedback.Domain.Entities;
+﻿using Dapper;
+using FlowFeedback.Domain.Entities;
 using FlowFeedback.Domain.Interfaces;
 using FlowFeedback.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 
 namespace FlowFeedback.Infrastructure.Repositories;
 
-public class VotoRepository : IVotoRepository
+public class VotoRepository(IDbConnectionFactory dbFactory) : IVotoRepository
 {
-    private readonly AppDbContext _context;
-
-    public VotoRepository(AppDbContext context)
+    public async Task<HashSet<Guid>> GetExistingIdsAsync(IEnumerable<Guid> idsToCheck)
     {
-        _context = context;
-    }
+        using var db = dbFactory.CreateConnection();
 
-    public async Task AdicionarAsync(Voto voto)
-    {
-        await _context.Votos.AddAsync(voto);
-        await _context.SaveChangesAsync();
+        var query = "SELECT Id FROM Votos WHERE Id IN @Ids";
+
+        var result = await db.QueryAsync<Guid>(query, new { Ids = idsToCheck });
+        return result.ToHashSet();
     }
 
     public async Task AdicionarLoteAsync(IEnumerable<Voto> votos)
     {
-        await _context.Votos.AddRangeAsync(votos);
-        await _context.SaveChangesAsync();
-    }
+        using var db = dbFactory.CreateConnection();
 
-    public Task<IEnumerable<Voto>> ObterPorTenantAsync(Guid tenantId, DateTime dataInicio, DateTime dataFim)
-    {
-        throw new NotImplementedException();
-    }
+        var sql = @"
+            INSERT INTO Votos (Id, TenantId, UnidadeId, DispositivoId, Valor, Comentario, DataHora, DataProcessamento)
+            VALUES (@Id, @TenantId, @UnidadeId, @DispositivoId, @Valor, @Comentario, @DataHora, @DataProcessamento)";
 
-    public async Task<bool> ExistsAsync(Guid id)
-    {
-        return await _context.Votos
-            .AnyAsync(v => v.Id == id);
-    }
-
-    public async Task<HashSet<Guid>> GetExistingIdsAsync(IEnumerable<Guid> idsToCheck)
-    {
-        var existing = await _context.Votos
-            .AsNoTracking()
-            .Where(v => idsToCheck.Contains(v.Id))
-            .Select(v => v.Id)
-            .ToListAsync();
-
-        return [.. existing];
+        await db.ExecuteAsync(sql, votos);
     }
 }

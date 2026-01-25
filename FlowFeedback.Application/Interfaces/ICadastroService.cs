@@ -5,9 +5,9 @@ namespace FlowFeedback.Application.Interfaces;
 
 public interface ICadastroService
 {
-    Task<Tenant> CadastrarTenantAsync(CreateTenantDto dto);
-    Task<Unidade> CadastrarUnidadeAsync(CreateUnidadeDto dto);
-    Task<Dispositivo> CadastrarDispositivoAsync(CreateDispositivoDto dto);
-    Task<AlvoAvaliacao> CadastrarAlvoAvaliacaoAsync(CreateAlvoAvaliacaoDto dto);
-    Task VincularAlvoAvaliacaoADispositivoAsync(string dispositivoId, IEnumerable<string> alvosId);
+    Task<TenantSaidaDto> CadastrarTenantAsync(CreateTenantDto dto);
+    Task<UnidadeSaidaDto> CadastrarUnidadeAsync(CreateUnidadeDto dto);
+    Task<DispositivoSaidaDto> CadastrarDispositivoAsync(CreateDispositivoDto dto);
+    Task<AlvoAvaliacaoSaidaDto> CadastrarAlvoAsync(CreateAlvoAvaliacaoDto dto);
+    Task VincularAlvosDispositivoAsync(CreateAlvoDispositivoDto dto);
 }

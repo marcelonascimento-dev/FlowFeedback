@@ -1,26 +1,28 @@
-﻿namespace FlowFeedback.Domain.Entities;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace FlowFeedback.Domain.Entities;
 
 public class Dispositivo
 {
-    public string Id { get; private set; }
-    public Guid TenantId { get; private set; }
-    public Guid UnidadeId { get; private set; }
-    public string NomeLocal { get; private set; }
-    public bool Ativo { get; private set; }
+    public Guid Id { get; set; }
 
-    public ICollection<AlvoAvaliacao> Alvos { get; private set; } = new List<AlvoAvaliacao>();
+    [Required]
+    public Guid UnidadeId { get; set; }
 
-    protected Dispositivo() { }
+    [Required]
+    public Guid TenantId { get; set; }
 
-    public Dispositivo(string id, Guid tenantId, Guid unidadeId, string nomeLocal)
-    {
-        Id = id;
-        TenantId = tenantId;
-        UnidadeId = unidadeId;
-        NomeLocal = nomeLocal;
-        Ativo = true;
-    }
+    [Required]
+    [MaxLength(100)]
+    public string Nome { get; set; }
 
-    public void Desativar() => Ativo = false;
-    public void Ativar() => Ativo = true;
+    [Required]
+    [MaxLength(100)]
+    public string Identificador { get; set; }
+
+    public bool Ativo { get; set; } = true;
+
+    public DateTime DataCriacao { get; set; } = DateTime.UtcNow;
+
+    public List<AlvoAvaliacao> AlvosAvaliacao { get; set; } = [];
 }

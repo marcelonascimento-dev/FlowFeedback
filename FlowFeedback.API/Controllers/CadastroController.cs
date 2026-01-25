@@ -62,7 +62,7 @@ public class CadastroController : ControllerBase
     {
         try
         {
-            var result = await _cadastroService.CadastrarAlvoAvaliacaoAsync(dto);
+            var result = await _cadastroService.CadastrarAlvoAsync(dto);
             return CreatedAtAction(nameof(CadastrarAlvo), new { id = result.Id }, result);
         }
         catch (ArgumentException ex)
@@ -78,7 +78,7 @@ public class CadastroController : ControllerBase
     {
         try
         {
-            await _cadastroService.VincularAlvoAvaliacaoADispositivoAsync(dto.DispositivoId, dto.alvosId);
+            await _cadastroService.VincularAlvosDispositivoAsync(dto);
             return CreatedAtAction(nameof(CadastrarAlvoDispositivo), new { dispositivoId = dto.DispositivoId }, null);
         }
         catch (ArgumentException ex)

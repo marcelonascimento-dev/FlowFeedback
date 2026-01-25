@@ -23,6 +23,16 @@ public class CachedDispositivoRepository : IDispositivoRepository
         };
     }
 
+    public Task<Dispositivo> AddDispositivoAsync(Dispositivo dispositivo)
+    {
+        return _innerRepository.AddDispositivoAsync(dispositivo);
+    }
+
+    public Task<bool> DispositivoExisteAsync(string identificador)
+    {
+        return _innerRepository.DispositivoExisteAsync(identificador);
+    }
+
     public async Task<Dispositivo?> GetByIdentifierAsync(string deviceIdentifier)
     {
         string cacheKey = $"device:{deviceIdentifier}";
@@ -43,5 +53,15 @@ public class CachedDispositivoRepository : IDispositivoRepository
         }
 
         return dispositivo;
+    }
+
+    public Task<Dispositivo?> GetDispositivoWithAlvosAsync(Guid id)
+    {
+        return _innerRepository.GetDispositivoWithAlvosAsync(id);
+    }
+
+    public Task UpdateDispositivoAsync(Dispositivo dispositivo)
+    {
+        return _innerRepository.UpdateDispositivoAsync(dispositivo);
     }
 }

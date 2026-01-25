@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using FlowFeedback.Domain.Enums;
+﻿using FlowFeedback.Domain.Enums;
 
 namespace FlowFeedback.Domain.Entities;
 
@@ -22,8 +21,6 @@ public class Voto
         >= 7 => ClassificacaoNps.Neutro,
         _ => ClassificacaoNps.Detrator
     };
-
-    protected Voto() { }
 
     public Voto(Guid id, Guid tenantId, Guid unidadeId, string deviceId, Guid alvoAvaliacaoId, int nota, DateTime dataHoraVoto, IEnumerable<string>? tags = null, string? comentario = null)
     {

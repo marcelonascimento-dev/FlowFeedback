@@ -1,4 +1,4 @@
-﻿namespace FlowFeedback.Application.DTOs;
+﻿namespace FlowFeedback.Domain.Models;
 
 public record ResumoNpsDto(
     string Nome,

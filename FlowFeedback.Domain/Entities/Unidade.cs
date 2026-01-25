@@ -2,25 +2,17 @@
 
 public class Unidade
 {
-    public Guid Id { get; private set; }
-    public Guid TenantId { get; private set; }
-    public string NomeLoja { get; private set; }
-    public string Cidade { get; private set; }
-    public string Endereco { get; private set; }
-    public bool Ativa { get; private set; }
+    public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
+    public Tenant Tenant { get; set; }
+    public string Nome { get; set; }
+
+    // Novos campos de Localização e Override
+    public string Cidade { get; set; }
+    public string Endereco { get; set; }
     public string? LogoUrlOverride { get; set; }
     public string? CorPrimariaOverride { get; set; }
     public string? CorSecundariaOverride { get; set; }
 
-    protected Unidade() { }
-
-    public Unidade(Guid tenantId, string nomeLoja, string cidade, string endereco)
-    {
-        Id = Guid.NewGuid();
-        TenantId = tenantId;
-        NomeLoja = nomeLoja;
-        Cidade = cidade;
-        Endereco = endereco;
-        Ativa = true;
-    }
+    public bool Ativo { get; set; }
 }

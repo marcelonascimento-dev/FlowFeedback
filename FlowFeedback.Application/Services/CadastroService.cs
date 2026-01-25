@@ -1,87 +1,124 @@
 ﻿using FlowFeedback.Application.DTOs;
 using FlowFeedback.Application.Interfaces;
 using FlowFeedback.Domain.Entities;
-using FlowFeedback.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
+using FlowFeedback.Domain.Interfaces;
 
 namespace FlowFeedback.Application.Services;
 
-public class CadastroService(AppDbContext context) : ICadastroService
+public class CadastroService(ICadastroRepository repository, IDispositivoRepository dispositivoRepository) : ICadastroService
 {
-    private readonly AppDbContext _context = context;
-
-    public async Task<Tenant> CadastrarTenantAsync(CreateTenantDto dto)
+    public async Task<TenantSaidaDto> CadastrarTenantAsync(CreateTenantDto dto)
     {
-        var tenant = new Tenant(dto.NomeCorporativo, dto.Cnpj);
-
-        _context.Tenants.Add(tenant);
-        await _context.SaveChangesAsync();
-        return tenant;
-    }
-
-    public async Task<Unidade> CadastrarUnidadeAsync(CreateUnidadeDto dto)
-    {
-        var tenantExists = await _context.Tenants.AnyAsync(t => t.Id == dto.TenantId);
-        if (!tenantExists) throw new ArgumentException("Tenant informado não existe.");
-
-        var unidade = new Unidade(dto.TenantId, dto.Nome, dto.Endereco, dto.Cidade)
+        var tenant = new Tenant
         {
-            LogoUrlOverride = dto.LogoUrlOverride,
-            CorPrimariaOverride = dto.CorPrimariaOverride,
-            CorSecundariaOverride = dto.CorSecundariaOverride
+            Id = Guid.NewGuid(),
+            Nome = dto.NomeCorporativo,
+            Cnpj = dto.Cnpj,
+            LogoUrl = dto.LogoUrl,
+            CorPrimaria = dto.CorPrimaria,
+            CorSecundaria = dto.CorSecundaria,
+            Ativo = true,
+            DataCriacao = DateTime.UtcNow
         };
 
-        _context.Unidades.Add(unidade);
-        await _context.SaveChangesAsync();
-        return unidade;
+        await repository.AddTenantAsync(tenant);
+        return new TenantSaidaDto(tenant.Id, tenant.Nome, tenant.Cnpj);
     }
 
-    public async Task<Dispositivo> CadastrarDispositivoAsync(CreateDispositivoDto dto)
+    public async Task<UnidadeSaidaDto> CadastrarUnidadeAsync(CreateUnidadeDto dto)
     {
-        var unidadeExists = await _context.Unidades.AnyAsync(u => u.Id == dto.UnidadeId);
-        if (!unidadeExists) throw new ArgumentException("Unidade informada não existe.");
+        var tenant = await repository.GetTenantByIdAsync(dto.TenantId);
+        if (tenant == null) throw new KeyNotFoundException("Tenant não encontrado.");
 
-        var dispositivo = new Dispositivo(dto.Identificador, dto.TenantId, dto.UnidadeId, dto.Nome);
+        var unidade = new Unidade
+        {
+            Id = Guid.NewGuid(),
+            TenantId = dto.TenantId,
+            Nome = dto.Nome,
+            Cidade = dto.Cidade,
+            Endereco = dto.Endereco,
+            LogoUrlOverride = dto.LogoUrlOverride,
+            CorPrimariaOverride = dto.CorPrimariaOverride,
+            CorSecundariaOverride = dto.CorSecundariaOverride,
+            Ativo = true
+        };
 
-        _context.Dispositivos.Add(dispositivo);
-        await _context.SaveChangesAsync();
-        return dispositivo;
+        await repository.AddUnidadeAsync(unidade);
+        return new UnidadeSaidaDto(unidade.Id, unidade.TenantId, unidade.Nome);
     }
 
-    public async Task<AlvoAvaliacao> CadastrarAlvoAvaliacaoAsync(CreateAlvoAvaliacaoDto dto)
+    public async Task<DispositivoSaidaDto> CadastrarDispositivoAsync(CreateDispositivoDto dto)
     {
-        var unidadeExists = await _context.Unidades.AnyAsync(u => u.Id == dto.UnidadeId);
-        if (!unidadeExists) throw new ArgumentException("Unidade informada não existe.");
+        var unidade = await repository.GetUnidadeByIdAsync(dto.UnidadeId);
+        if (unidade == null) throw new KeyNotFoundException("Unidade não encontrada.");
 
-        var alvo = new AlvoAvaliacao(dto.UnidadeId, dto.Titulo, dto.Subtitulo, dto.ImagemUrl, dto.Tipo, dto.Ordem ?? 0);
+        if (unidade.TenantId != dto.TenantId)
+            throw new InvalidOperationException("A Unidade informada não pertence ao Tenant informado.");
 
-        _context.AlvosAvaliacao.Add(alvo);
-        await _context.SaveChangesAsync();
-        return alvo;
+        if (await dispositivoRepository.DispositivoExisteAsync(dto.Identificador))
+            throw new InvalidOperationException($"O Identificador '{dto.Identificador}' já está em uso.");
+
+        var dispositivo = new Dispositivo
+        {
+            Id = Guid.NewGuid(),
+            UnidadeId = dto.UnidadeId,
+            TenantId = dto.TenantId,
+            Nome = dto.Nome,
+            Identificador = dto.Identificador,
+            Ativo = true,
+            DataCriacao = DateTime.UtcNow
+        };
+
+        await dispositivoRepository.AddDispositivoAsync(dispositivo);
+        return new DispositivoSaidaDto(dispositivo.Id, dispositivo.UnidadeId, dispositivo.Nome, dispositivo.Identificador);
     }
 
-    public async Task VincularAlvoAvaliacaoADispositivoAsync(string dispositivoId, IEnumerable<string> alvosId)
+    public async Task<AlvoAvaliacaoSaidaDto> CadastrarAlvoAsync(CreateAlvoAvaliacaoDto dto)
     {
-        var dispositivo = await _context.Dispositivos
-            .Include(d => d.Alvos)
-            .FirstOrDefaultAsync(d => d.Id == dispositivoId);
+        var unidade = await repository.GetUnidadeByIdAsync(dto.UnidadeId);
+        if (unidade == null) throw new KeyNotFoundException("Unidade não encontrada.");
+
+        var alvo = new AlvoAvaliacao
+        {
+            Id = Guid.NewGuid(),
+            UnidadeId = dto.UnidadeId,
+            TenantId = unidade.TenantId,
+            Nome = dto.Titulo, 
+            Subtitulo = dto.Subtitulo,
+            ImagemUrl = dto.ImagemUrl,
+            Ordem = dto.Ordem ?? 0,
+            Tipo = dto.Tipo,
+            Ativo = true
+        };
+
+        await repository.AddAlvoAsync(alvo);
+        return new AlvoAvaliacaoSaidaDto(alvo.Id, alvo.Nome, alvo.Tipo.ToString());
+    }
+
+    public async Task VincularAlvosDispositivoAsync(CreateAlvoDispositivoDto dto)
+    {
+        if (!Guid.TryParse(dto.DispositivoId, out var devId))
+            throw new ArgumentException("ID do dispositivo inválido.");
+
+        var dispositivo = await dispositivoRepository.GetDispositivoWithAlvosAsync(devId);
 
         if (dispositivo == null)
+            throw new KeyNotFoundException("Dispositivo não encontrado.");
+
+        dispositivo.AlvosAvaliacao.Clear();
+
+        foreach (var idString in dto.alvosId)
         {
-            throw new Exception("Dispositivo não encontrado.");
+            if (Guid.TryParse(idString, out var alvoId))
+            {
+                var alvo = await repository.GetAlvoByIdAsync(alvoId);
+                if (alvo != null && alvo.TenantId == dispositivo.TenantId)
+                {
+                    dispositivo.AlvosAvaliacao.Add(alvo);
+                }
+            }
         }
 
-        dispositivo.Alvos.Clear();
-
-        var novosAlvos = await _context.AlvosAvaliacao
-            .Where(a => alvosId.Contains(a.Id.ToString()))
-            .ToListAsync();
-
-        foreach (var alvo in novosAlvos)
-        {
-            dispositivo.Alvos.Add(alvo);
-        }
-
-        await _context.SaveChangesAsync();
+        await dispositivoRepository.UpdateDispositivoAsync(dispositivo);
     }
 }
