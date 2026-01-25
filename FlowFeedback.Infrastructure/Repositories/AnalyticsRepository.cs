@@ -1,6 +1,5 @@
 ﻿using Dapper;
-using FlowFeedback.Application.DTOs;
-using FlowFeedback.Application.Interfaces;
+using FlowFeedback.Domain.Interfaces;
 using FlowFeedback.Domain.Models;
 using FlowFeedback.Infrastructure.Data;
 
