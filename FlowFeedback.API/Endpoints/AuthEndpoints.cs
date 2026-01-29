@@ -1,4 +1,4 @@
-﻿using FlowFeedback.Application.Services;
+﻿using FlowFeedback.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FlowFeedback.API.Endpoints;
@@ -9,7 +9,8 @@ public static class AuthEndpoints
     {
         var publicGroup = app.MapGroup("/api/auth");
 
-        publicGroup.MapPost("/login", async (LoginRequest req, AuthService service) =>
+        // Correção aqui: IAuthService em vez de AuthService
+        publicGroup.MapPost("/login", async (LoginRequest req, IAuthService service) =>
         {
             var token = await service.AutenticarAsync(req.Email, req.Senha);
             return token is null ? Results.Unauthorized() : Results.Ok(new { Token = token });
@@ -20,7 +21,7 @@ public static class AuthEndpoints
 
         adminGroup.MapPost("/generate-key", async (
             [FromBody] CreateDeviceRequest req,
-            DeviceService deviceService,
+            IDeviceService deviceService,
             HttpContext http) =>
         {
             var tenantClaim = http.User.FindFirst("TenantCode")?.Value;

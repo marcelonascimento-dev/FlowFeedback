@@ -1,5 +1,4 @@
-﻿using System.Data;
-using Dapper;
+﻿using Dapper;
 using FlowFeedback.Domain.Entities;
 using FlowFeedback.Domain.Interfaces;
 using FlowFeedback.Infrastructure.Data;
@@ -18,34 +17,45 @@ public class CadastroRepository(IDbConnectionFactory dbFactory) : ICadastroRepos
         return tenant;
     }
 
+    public async Task<bool> CriarSchemaTenantAsync(Guid tenantId)
+    {
+        var schemaName = $"tenant_{tenantId:N}";
+        using var masterConn = dbFactory.CreateMasterConnection();
+        await masterConn.ExecuteAsync($"CREATE DATABASE [{schemaName}]");
+
+        var scriptTabelas = ScriptProvider.GetTenantSchemaScript();
+        
+        return await masterConn.ExecuteAsync(scriptTabelas) == 1;
+    }
+
     public async Task<Tenant?> GetTenantByIdAsync(Guid id)
     {
         using var db = dbFactory.CreateTenantConnection();
         return await db.QueryFirstOrDefaultAsync<Tenant>("SELECT * FROM Tenants WHERE Id = @Id", new { Id = id });
     }
 
-    public async Task<Unidade> AddUnidadeAsync(Unidade unidade)
+    public async Task<Empresa> AddEmpresaAsync(Empresa Empresa)
     {
         using var db = dbFactory.CreateTenantConnection();
-        var sql = @"INSERT INTO Unidades (Id, TenantId, Nome, Cidade, Endereco, LogoUrlOverride, CorPrimariaOverride, CorSecundariaOverride, Ativo) 
+        var sql = @"INSERT INTO Empresas (Id, TenantId, Nome, Cidade, Endereco, LogoUrlOverride, CorPrimariaOverride, CorSecundariaOverride, Ativo) 
                     VALUES (@Id, @TenantId, @Nome, @Cidade, @Endereco, @LogoUrlOverride, @CorPrimariaOverride, @CorSecundariaOverride, @Ativo)";
 
-        await db.ExecuteAsync(sql, unidade);
-        return unidade;
+        await db.ExecuteAsync(sql, Empresa);
+        return Empresa;
     }
 
-    public async Task<Unidade?> GetUnidadeByIdAsync(Guid id)
+    public async Task<Empresa?> GetEmpresaByIdAsync(Guid id)
     {
         using var db = dbFactory.CreateTenantConnection();
-        var sql = @"SELECT u.*, t.* FROM Unidades u 
+        var sql = @"SELECT u.*, t.* FROM Empresas u 
                     INNER JOIN Tenants t ON u.TenantId = t.Id 
                     WHERE u.Id = @Id";
 
-        return (await db.QueryAsync<Unidade, Tenant, Unidade>(
+        return (await db.QueryAsync<Empresa, Tenant, Empresa>(
             sql,
-            (unidade, tenant) => {
-                unidade.Tenant = tenant;
-                return unidade;
+            (Empresa, tenant) => {
+                Empresa.Tenant = tenant;
+                return Empresa;
             },
             new { Id = id },
             splitOn: "Id")).FirstOrDefault();
@@ -54,8 +64,8 @@ public class CadastroRepository(IDbConnectionFactory dbFactory) : ICadastroRepos
     public async Task<AlvoAvaliacao> AddAlvoAsync(AlvoAvaliacao alvo)
     {
         using var db = dbFactory.CreateTenantConnection();
-        var sql = @"INSERT INTO AlvosAvaliacao (Id, UnidadeId, TenantId, Nome, Subtitulo, ImagemUrl, Ordem, Tipo, Ativo) 
-                    VALUES (@Id, @UnidadeId, @TenantId, @Nome, @Subtitulo, @ImagemUrl, @Ordem, @Tipo, @Ativo)";
+        var sql = @"INSERT INTO AlvosAvaliacao (Id, EmpresaId, TenantId, Nome, Subtitulo, ImagemUrl, Ordem, Tipo, Ativo) 
+                    VALUES (@Id, @EmpresaId, @TenantId, @Nome, @Subtitulo, @ImagemUrl, @Ordem, @Tipo, @Ativo)";
 
         await db.ExecuteAsync(sql, alvo);
         return alvo;

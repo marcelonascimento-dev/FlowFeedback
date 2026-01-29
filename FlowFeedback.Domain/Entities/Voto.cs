@@ -6,7 +6,7 @@ public class Voto
 {
     public Guid Id { get; private set; }
     public Guid TenantId { get; private set; }
-    public Guid UnidadeId { get; private set; }
+    public Guid EmpresaId { get; private set; }
     public string DeviceId { get; private set; }
     public Guid AlvoAvaliacaoId { get; private set; }
     public int Nota { get; private set; }
@@ -22,15 +22,15 @@ public class Voto
         _ => ClassificacaoNps.Detrator
     };
 
-    public Voto(Guid id, Guid tenantId, Guid unidadeId, string deviceId, Guid alvoAvaliacaoId, int nota, DateTime dataHoraVoto, IEnumerable<string>? tags = null, string? comentario = null)
+    public Voto(Guid id, Guid tenantId, Guid EmpresaId, string deviceId, Guid alvoAvaliacaoId, int nota, DateTime dataHoraVoto, IEnumerable<string>? tags = null, string? comentario = null)
     {
         if (tenantId == Guid.Empty) throw new ArgumentException("TenantId inválido");
-        if (unidadeId == Guid.Empty) throw new ArgumentException("UnidadeId inválida");
+        if (EmpresaId == Guid.Empty) throw new ArgumentException("EmpresaId inválida");
         if (nota < 0 || nota > 10) throw new ArgumentOutOfRangeException("Nota deve ser entre 0 e 10");
 
         Id = id;
         TenantId = tenantId;
-        UnidadeId = unidadeId;
+        EmpresaId = EmpresaId;
         DeviceId = deviceId;
         AlvoAvaliacaoId = alvoAvaliacaoId;
         Nota = nota;

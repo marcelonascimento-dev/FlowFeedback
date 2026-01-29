@@ -10,7 +10,7 @@ public class DispositivoRepository(IDbConnectionFactory dbFactory) : IDispositiv
     public async Task<Dispositivo?> GetByIdentifierAsync(string deviceIdentifier)
     {
         string SqlSelectByIdentifier = @"
-        SELECT Id, UnidadeId, TenantId, Nome, Identificador, Ativo, DataCriacao 
+        SELECT Id, EmpresaId, TenantId, Nome, Identificador, Ativo, DataCriacao 
         FROM Dispositivos 
         WHERE Identificador = @Identificador";
 
@@ -22,8 +22,8 @@ public class DispositivoRepository(IDbConnectionFactory dbFactory) : IDispositiv
     public async Task<Dispositivo> AddDispositivoAsync(Dispositivo dispositivo)
     {
         using var db = dbFactory.CreateTenantConnection();
-        var sql = @"INSERT INTO Dispositivos (Id, UnidadeId, TenantId, Nome, Identificador, Ativo, DataCriacao) 
-                    VALUES (@Id, @UnidadeId, @TenantId, @Nome, @Identificador, @Ativo, @DataCriacao)";
+        var sql = @"INSERT INTO Dispositivos (Id, EmpresaId, TenantId, Nome, Identificador, Ativo, DataCriacao) 
+                    VALUES (@Id, @EmpresaId, @TenantId, @Nome, @Identificador, @Ativo, @DataCriacao)";
 
         await db.ExecuteAsync(sql, dispositivo);
         return dispositivo;

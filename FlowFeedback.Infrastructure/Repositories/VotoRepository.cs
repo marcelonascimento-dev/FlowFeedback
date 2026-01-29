@@ -22,8 +22,8 @@ public class VotoRepository(IDbConnectionFactory dbFactory) : IVotoRepository
         using var db = dbFactory.CreateTenantConnection();
 
         var sql = @"
-            INSERT INTO Votos (Id, TenantId, UnidadeId, DispositivoId, Valor, Comentario, DataHora, DataProcessamento)
-            VALUES (@Id, @TenantId, @UnidadeId, @DispositivoId, @Valor, @Comentario, @DataHora, @DataProcessamento)";
+            INSERT INTO Votos (Id, TenantId, EmpresaId, DispositivoId, Valor, Comentario, DataHora, DataProcessamento)
+            VALUES (@Id, @TenantId, @EmpresaId, @DispositivoId, @Valor, @Comentario, @DataHora, @DataProcessamento)";
 
         await db.ExecuteAsync(sql, votos);
     }

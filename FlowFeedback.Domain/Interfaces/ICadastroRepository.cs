@@ -6,8 +6,8 @@ public interface ICadastroRepository
 {
     Task<Tenant> AddTenantAsync(Tenant tenant);
     Task<Tenant?> GetTenantByIdAsync(Guid id);
-    Task<Unidade> AddUnidadeAsync(Unidade unidade);
-    Task<Unidade?> GetUnidadeByIdAsync(Guid id);
+    Task<Empresa> AddEmpresaAsync(Empresa Empresa);
+    Task<Empresa?> GetEmpresaByIdAsync(Guid id);
     Task<AlvoAvaliacao> AddAlvoAsync(AlvoAvaliacao alvo);
     Task<AlvoAvaliacao?> GetAlvoByIdAsync(Guid id);
 }

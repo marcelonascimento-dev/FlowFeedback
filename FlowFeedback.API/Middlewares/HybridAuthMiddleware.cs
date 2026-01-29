@@ -2,9 +2,9 @@
 
 namespace FlowFeedback.API.Middlewares;
 
-public class HybridAuthMiddleware(RequestDelegate next, IDeviceMasterRepository deviceMasterRepository)
+public class HybridAuthMiddleware(RequestDelegate next)
 {
-    public async Task InvokeAsync(HttpContext context)
+    public async Task InvokeAsync(HttpContext context, IDeviceMasterRepository deviceMasterRepository)
     {
         if (context.User.Identity?.IsAuthenticated == true)
         {
@@ -14,14 +14,14 @@ public class HybridAuthMiddleware(RequestDelegate next, IDeviceMasterRepository 
 
         if (context.Request.Headers.TryGetValue("X-Device-Key", out var extractedApiKey))
         {
-            await HandleDeviceAuth(context, extractedApiKey.ToString());
+            await HandleDeviceAuth(context, deviceMasterRepository, extractedApiKey.ToString());
             return;
         }
 
         await next(context);
     }
 
-    private async Task HandleDeviceAuth(HttpContext context, string apiKey)
+    private async Task HandleDeviceAuth(HttpContext context, IDeviceMasterRepository deviceMasterRepository, string apiKey)
     {
         if (!context.Request.Headers.TryGetValue("X-Hardware-Sig", out var currentHardwareSig))
         {
@@ -38,7 +38,7 @@ public class HybridAuthMiddleware(RequestDelegate next, IDeviceMasterRepository 
             return;
         }
 
-        if (licenca.HardwareSignature == null)
+        if (string.IsNullOrEmpty(licenca.HardwareSignature))
         {
             await deviceMasterRepository.VincularHardwareAsync(apiKey, currentHardwareSig.ToString());
         }

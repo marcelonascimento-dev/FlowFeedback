@@ -1,6 +1,6 @@
 ﻿namespace FlowFeedback.Domain.Entities;
 
-public class Unidade
+public class Empresa
 {
     public Guid Id { get; set; }
     public Guid TenantId { get; set; }

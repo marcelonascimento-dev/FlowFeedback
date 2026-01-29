@@ -7,7 +7,7 @@ public class Dispositivo
     public Guid Id { get; set; }
 
     [Required]
-    public Guid UnidadeId { get; set; }
+    public Guid EmpresaId { get; set; }
 
     [Required]
     public Guid TenantId { get; set; }

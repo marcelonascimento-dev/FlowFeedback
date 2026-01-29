@@ -1,50 +1,42 @@
 ﻿using System.Data;
 using Dapper;
-using FlowFeedback.Domain.Entities;
-using FlowFeedback.Infrastructure.Security;
-using Microsoft.AspNetCore.Http;
+using FlowFeedback.Application.Interfaces;
+using FlowFeedback.Application.Interfaces.Security;
+using FlowFeedback.Infrastructure.Data;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 
-namespace FlowFeedback.Infrastructure.Data;
-
-public class DbConnectionFactory : IDbConnectionFactory
+public sealed class DbConnectionFactory(
+    IConfiguration configuration,
+    IDistributedCache cache,
+    ISecretProvider secretProvider,
+    ITenantContext tenant) : IDbConnectionFactory
 {
-    private readonly IConfiguration _config;
-    private readonly IHttpContextAccessor _httpContext;
-    private readonly IDistributedCache _cache;
-    private readonly string _masterConnection;
-    private readonly ICryptoService _crypto;
+    private const string TenantCacheKeyPrefix = "tenant:connection:";
+    private static readonly TimeSpan TenantCacheTtl = TimeSpan.FromMinutes(10);
 
-    public DbConnectionFactory(IConfiguration config, IHttpContextAccessor httpContext, IDistributedCache cache, ICryptoService crypto)
-    {
-        _config = config;
-        _httpContext = httpContext;
-        _cache = cache;
-        _masterConnection = _config.GetConnectionString("DefaultConnection");
-        _crypto = crypto;
-    }
-
-    public IDbConnection CreateMasterConnection() => new SqlConnection(_masterConnection);
+    private readonly string _masterConnectionString =
+            configuration.GetConnectionString("DefaultConnection")
+            ?? throw new InvalidOperationException("DefaultConnection não configurada.");
+    public IDbConnection CreateMasterConnection() => new SqlConnection(_masterConnectionString);
 
     public IDbConnection CreateTenantConnection()
     {
-        var tenantCodeStr = _httpContext.HttpContext?.Request.Headers["X-Tenant-Code"].ToString();
-        if (!int.TryParse(tenantCodeStr, out int tenantCode))
-            throw new UnauthorizedAccessException("Tenant inválido.");
+        var cacheKey = $"{TenantCacheKeyPrefix}{tenant.TenantCode}";
+        var connectionString = cache.GetString(cacheKey);
 
-        string cacheKey = $"tenant_conn_{tenantCode}";
-        string connectionString = _cache.GetString(cacheKey);
-
-        if (string.IsNullOrEmpty(connectionString))
+        if (string.IsNullOrWhiteSpace(connectionString))
         {
-            connectionString = ResolveConnectionStringFromMaster(tenantCode);
+            connectionString = ResolveConnectionStringFromMaster(tenant.TenantCode);
 
-            _cache.SetString(cacheKey, connectionString, new DistributedCacheEntryOptions
-            {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
-            });
+            cache.SetString(
+                cacheKey,
+                connectionString,
+                new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TenantCacheTtl
+                });
         }
 
         return new SqlConnection(connectionString);
@@ -52,26 +44,23 @@ public class DbConnectionFactory : IDbConnectionFactory
 
     private string ResolveConnectionStringFromMaster(int tenantCode)
     {
-        using var masterDb = CreateMasterConnection();
-        var meta = masterDb.QueryFirstOrDefault<TenantMetadata>(
-            "SELECT DbServer, DbName, DbUser, DbPasswordEncrypted FROM Tenants WHERE Id = @Id",
-            new { Id = tenantCode });
+        const string sql = """
+            SELECT ConnectionSecretKey
+            FROM Tenants
+            WHERE Codigo = @Codigo AND Status = 1
+        """;
 
-        if (meta == null) throw new Exception("Configuração de banco não encontrada para este Tenant.");
+        using var connection = CreateMasterConnection();
 
-        var builder = new SqlConnectionStringBuilder(_masterConnection)
-        {
-            DataSource = meta.DbServer,
-            InitialCatalog = meta.DbName,
-            TrustServerCertificate = true
-        };
+        var secretKey = connection.QueryFirstOrDefault<string>(sql, new { Codigo = tenantCode });
 
-        if (!string.IsNullOrEmpty(meta.DbUser))
-        {
-            builder.UserID = meta.DbUser;
-            builder.Password = _crypto.Decrypt(meta.DbPasswordEncrypted);
-        }
+        if (string.IsNullOrWhiteSpace(secretKey))
+            throw new UnauthorizedAccessException("Tenant inválido ou inativo.");
 
-        return builder.ConnectionString;
+        return secretProvider
+            .GetSecretAsync(secretKey)
+            .GetAwaiter()
+            .GetResult()
+            ?? throw new InvalidOperationException("Segredo não encontrado no vault.");
     }
 }

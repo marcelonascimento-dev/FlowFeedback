@@ -1,17 +1,15 @@
-﻿namespace FlowFeedback.Domain.Entities;
+﻿using FlowFeedback.Domain.Enums;
+
+namespace FlowFeedback.Domain.Entities;
 
 public class Tenant
 {
     public Guid Id { get; set; }
+    public long Codigo { get; set; }
     public string Nome { get; set; }
-    public string Cnpj { get; set; }
-
-    public string? LogoUrl { get; set; }
-    public string? CorPrimaria { get; set; }
-    public string? CorSecundaria { get; set; }
-
-    public bool Ativo { get; set; }
+    public string Slug { get; set; }
+    public EnumTipoAmbiente TipoAmbiente { get; set; }
+    public string ConnectionSecretKey { get; set; }
+    public EnumStatusCadastro Status { get; set; }
     public DateTime DataCriacao { get; set; }
-
-    public ICollection<Unidade> Unidades { get; set; }
 }

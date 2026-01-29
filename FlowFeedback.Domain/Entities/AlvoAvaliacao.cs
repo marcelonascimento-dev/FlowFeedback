@@ -5,7 +5,7 @@ namespace FlowFeedback.Domain.Entities;
 public class AlvoAvaliacao
 {
     public Guid Id { get; set; }
-    public Guid UnidadeId { get; set; }
+    public Guid EmpresaId { get; set; }
     public Guid TenantId { get; set; }
 
     public string Nome { get; set; }
