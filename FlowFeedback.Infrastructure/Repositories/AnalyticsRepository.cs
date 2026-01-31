@@ -24,15 +24,15 @@ public class AnalyticsRepository(IDbConnectionFactory dbFactory) : IAnalyticsRep
 
         var stats = await db.QueryFirstOrDefaultAsync<dynamic>(sql, new { TenantId = tenantId, Inicio = inicio, Fim = fim });
 
-        if (stats == null || stats.TotalVotos == 0)
+        if (stats == null || stats?.TotalVotos == 0)
         {
             return new NpsScoreDto { Score = 0, TotalVotos = 0 };
         }
 
-        long total = stats.TotalVotos;
-        long promotores = stats.QtdPromotores;
-        long detratores = stats.QtdDetratores;
-        long neutros = stats.QtdNeutros;
+        long total = stats?.TotalVotos;
+        long promotores = stats?.QtdPromotores;
+        long detratores = stats?.QtdDetratores;
+        long neutros = stats?.QtdNeutros;
 
         double score = ((double)(promotores - detratores) / total) * 100;
 

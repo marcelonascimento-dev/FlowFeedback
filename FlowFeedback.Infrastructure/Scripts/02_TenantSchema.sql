@@ -2,28 +2,59 @@
 
 CREATE TABLE Empresas (
     Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    Nome NVARCHAR(100) NOT NULL,
-    Cidade NVARCHAR(100),
+    TenantId UNIQUEIDENTIFIER NOT NULL,
+    Nome NVARCHAR(200) NOT NULL,
+    Cidade NVARCHAR(100) NULL,
+    Endereco NVARCHAR(255) NULL,
+    LogoUrlOverride NVARCHAR(500) NULL,
+    CorPrimariaOverride NVARCHAR(20) NULL,
+    CorSecundariaOverride NVARCHAR(20) NULL,
     Ativo BIT DEFAULT 1
 );
 
-CREATE TABLE Dispositivos (
+CREATE TABLE AlvosAvaliacao (
     Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    EmpresaId UNIQUEIDENTIFIER NULL,
-    Nome NVARCHAR(100) NOT NULL,
-    Identificador NVARCHAR(50), -- Código interno visual
+    EmpresaId UNIQUEIDENTIFIER NOT NULL,
+    TenantId UNIQUEIDENTIFIER NOT NULL,
+    Nome NVARCHAR(200) NOT NULL,
+    Subtitulo NVARCHAR(200) NULL,
+    ImagemUrl NVARCHAR(500) NULL,
+    Ordem INT DEFAULT 0,
+    Tipo INT NOT NULL,
     Ativo BIT DEFAULT 1,
     FOREIGN KEY (EmpresaId) REFERENCES Empresas(Id)
 );
 
+CREATE TABLE Dispositivos (
+    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    EmpresaId UNIQUEIDENTIFIER NOT NULL,
+    TenantId UNIQUEIDENTIFIER NOT NULL,
+    Nome NVARCHAR(100) NOT NULL,
+    Identificador NVARCHAR(100) NOT NULL,
+    Ativo BIT DEFAULT 1,
+    DataCriacao DATETIME DEFAULT GETUTCDATE(),
+    FOREIGN KEY (EmpresaId) REFERENCES Empresas(Id)
+);
+CREATE INDEX IX_Dispositivos_Identificador ON Dispositivos(Identificador);
+
+CREATE TABLE DispositivoAlvos (
+    DispositivoId UNIQUEIDENTIFIER NOT NULL,
+    AlvoAvaliacaoId UNIQUEIDENTIFIER NOT NULL,
+    PRIMARY KEY (DispositivoId, AlvoAvaliacaoId),
+    FOREIGN KEY (DispositivoId) REFERENCES Dispositivos(Id),
+    FOREIGN KEY (AlvoAvaliacaoId) REFERENCES AlvosAvaliacao(Id)
+);
+
 CREATE TABLE Votos (
     Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    TenantId UNIQUEIDENTIFIER NOT NULL,
+    EmpresaId UNIQUEIDENTIFIER NOT NULL,
     DispositivoId UNIQUEIDENTIFIER NOT NULL,
+    Valor INT NOT NULL,
+    Comentario NVARCHAR(1000) NULL,
     DataHora DATETIME NOT NULL,
-    Valor INT NOT NULL, -- 0 a 10 (NPS)
-    Comentario NVARCHAR(500) NULL,
-    FOREIGN KEY (DispositivoId) REFERENCES Dispositivos(Id)
+    DataProcessamento DATETIME NULL,
+    FOREIGN KEY (DispositivoId) REFERENCES Dispositivos(Id),
+    FOREIGN KEY (EmpresaId) REFERENCES Empresas(Id)
 );
--- Índices para performance de Dashboards
-CREATE INDEX IX_Votos_Data ON Votos(DataHora);
-CREATE INDEX IX_Votos_Dispositivo ON Votos(DispositivoId);
+CREATE INDEX IX_Votos_DataHora ON Votos(DataHora);

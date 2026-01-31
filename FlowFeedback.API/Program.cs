@@ -97,23 +97,6 @@ builder.Services.AddScoped<IFeedbackService, FeedbackService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IDeviceService, DeviceService>();
 
-
-// ==========================
-// MASS TRANSIT
-// ==========================
-
-builder.Services.AddMassTransit(x =>
-{
-    x.AddConsumer<ProcessarVotosConsumer>();
-
-    x.UsingRabbitMq((context, cfg) =>
-    {
-        cfg.ConfigureEndpoints(context);
-
-        cfg.UseMessageScope(context);
-    });
-});
-
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
