@@ -10,29 +10,34 @@ using Microsoft.IdentityModel.Tokens;
 namespace FlowFeedback.Application.Services;
 
 public sealed class AuthService(
-    ITenantUserIndexRepository tenantUserIndexRepository,
-    IUsuarioRepository usuarioRepository,
+    IUserTenantRepository userTenantRepository,
+    IUserRepository userRepository,
     IConfiguration config) : IAuthService
 {
     public async Task<string?> AutenticarAsync(string email, string senha)
     {
-        var index = await tenantUserIndexRepository.GetByEmailAsync(email);
+        // 1. Find UserTenant by Email (checks if user exists and is linked to a tenant)
+        // Note: usage of GetByEmailAsync implies 1:1 mapping or default tenant. 
+        var userTenant = await userTenantRepository.GetByEmailAsync(email);
 
-        if (index is null || !index.Ativo)
+        if (userTenant is null || !userTenant.IsActive)
             return null;
 
-        var user = await usuarioRepository.ObterPorIdAsync(index.UserId);
+        // 2. Find User
+        var user = await userRepository.GetByIdAsync(userTenant.UserId);
 
-        if (user is null || !user.Ativo)
+        if (user is null || !user.IsActive)
             return null;
 
-        if (!BCrypt.Net.BCrypt.Verify(senha, user.SenhaHash))
+        // 3. Verify Password
+        if (!BCrypt.Net.BCrypt.Verify(senha, user.PasswordHash))
             return null;
 
-        return GerarJwtToken(user, index.TenantCodigo);
+        // 4. Generate Token
+        return GerarJwtToken(user, userTenant);
     }
 
-    private string GerarJwtToken(Usuario user, long tenantCodigo)
+    private string GerarJwtToken(User user, UserTenant userTenant)
     {
         var keyString = config["Jwt:Key"]
             ?? throw new InvalidOperationException("Jwt:Key não configurada.");
@@ -43,8 +48,8 @@ public sealed class AuthService(
         {
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new(ClaimTypes.Email, user.Email),
-            new(ClaimTypes.Role, user.Role),
-            new("TenantCode", tenantCodigo.ToString())
+            new(ClaimTypes.Role, userTenant.Role.ToString()), // Use Enum.ToString()
+            new("TenantId", userTenant.TenantId.ToString()) // TenantId Guid
         };
 
         var tokenDescriptor = new SecurityTokenDescriptor

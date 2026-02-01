@@ -24,12 +24,12 @@ public static class AuthEndpoints
             IDeviceService deviceService,
             HttpContext http) =>
         {
-            var tenantClaim = http.User.FindFirst("TenantCode")?.Value;
+            var tenantClaim = http.User.FindFirst("TenantId")?.Value;
 
-            if (!int.TryParse(tenantClaim, out int tenantCode))
+            if (!Guid.TryParse(tenantClaim, out Guid tenantId))
                 return Results.Forbid();
 
-            var apiKey = await deviceService.RegistrarNovoDispositivoAsync(tenantCode, req.Nome);
+            var apiKey = await deviceService.RegistrarNovoDispositivoAsync(tenantId, req.Nome);
 
             return Results.Ok(new
             {

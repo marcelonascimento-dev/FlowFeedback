@@ -12,31 +12,33 @@ namespace FlowFeedback.Infrastructure.Repositories
             const string sql = @"
                 INSERT INTO Tenants (
                     Id,
-                    Nome,
+                    Name,
                     Slug,
                     Status,
-                    TipoAmbiente,
-                    ConnectionSecretKey
+                    DbServer,
+                    DbName,
+                    DbUser,
+                    DbPassword
                 )
                 OUTPUT 
                     inserted.Id,
-                    inserted.Codigo,
-                    inserted.DataCriacao
+                    inserted.CreatedAt
                 VALUES (
                     @Id,
-                    @Nome,
+                    @Name,
                     @Slug,
                     @Status,
-                    @TipoAmbiente,
-                    @ConnectionSecretKey
+                    @DbServer,
+                    @DbName,
+                    @DbUser,
+                    @DbPassword
                 );";
 
             using var db = dbConnectionFactory.CreateMasterConnection();
 
             var result = await db.QuerySingleAsync<Tenant>(sql, tenant);
 
-            tenant.Codigo = result.Codigo;
-            tenant.DataCriacao = result.DataCriacao;
+            tenant.CreatedAt = result.CreatedAt;
 
             return tenant;
 
@@ -47,13 +49,14 @@ namespace FlowFeedback.Infrastructure.Repositories
             const string sql = @"
                 SELECT 
                     Id,
-                    Codigo,
-                    Nome,
+                    Name,
                     Slug,
                     Status,
-                    TipoAmbiente,
-                    ConnectionSecretKey,
-                    DataCriacao
+                    DbServer,
+                    DbName,
+                    DbUser,
+                    DbPassword,
+                    CreatedAt
                 FROM Tenants
                 WHERE Id = @Id";
 
@@ -71,13 +74,14 @@ namespace FlowFeedback.Infrastructure.Repositories
             const string sql = @"
                 SELECT 
                     Id,
-                    Codigo,
-                    Nome,
+                    Name,
                     Slug,
                     Status,
-                    TipoAmbiente,
-                    ConnectionSecretKey,
-                    DataCriacao
+                    DbServer,
+                    DbName,
+                    DbUser,
+                    DbPassword,
+                    CreatedAt
                 FROM Tenants
                 WHERE Slug = @Slug";
 
@@ -86,30 +90,6 @@ namespace FlowFeedback.Infrastructure.Repositories
             return await db.QueryFirstOrDefaultAsync<Tenant>(
                 sql,
                 new { Slug = slug }
-            );
-        }
-
-
-        public async Task<Tenant?> GetTenantAsync(long codigo)
-        {
-            const string sql = @"
-                SELECT 
-                    Id,
-                    Codigo,
-                    Nome,
-                    Slug,
-                    Status,
-                    TipoAmbiente,
-                    ConnectionSecretKey,
-                    DataCriacao
-                FROM Tenants
-                WHERE Codigo = @Codigo";
-
-            using var db = dbConnectionFactory.CreateMasterConnection();
-
-            return await db.QueryFirstOrDefaultAsync<Tenant>(
-                sql,
-                new { Codigo = codigo }
             );
         }
 

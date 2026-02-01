@@ -10,7 +10,6 @@ using Microsoft.Extensions.Configuration;
 public sealed class DbConnectionFactory(
     IConfiguration configuration,
     IDistributedCache cache,
-    ISecretProvider secretProvider,
     ITenantContext tenant) : IDbConnectionFactory
 {
     private const string TenantCacheKeyPrefix = "tenant:connection:";
@@ -23,12 +22,15 @@ public sealed class DbConnectionFactory(
 
     public IDbConnection CreateTenantConnection()
     {
-        var cacheKey = $"{TenantCacheKeyPrefix}{tenant.TenantCode}";
+        // Now resolves using TenantId from ITenantContext, assuming it provides the ID.
+        // We might need to update ITenantContext to provide Guid TenantId instead of int Code.
+        // Assuming ITenantContext is updated later. For now let's assume valid TenantId in context.
+        var cacheKey = $"{TenantCacheKeyPrefix}{tenant.TenantId}";
         var connectionString = cache.GetString(cacheKey);
 
         if (string.IsNullOrWhiteSpace(connectionString))
         {
-            connectionString = ResolveConnectionStringFromMaster(tenant.TenantCode);
+            connectionString = ResolveConnectionStringFromMaster(tenant.TenantId);
 
             cache.SetString(
                 cacheKey,
@@ -42,25 +44,31 @@ public sealed class DbConnectionFactory(
         return new SqlConnection(connectionString);
     }
 
-    private string ResolveConnectionStringFromMaster(int tenantCode)
+    private string ResolveConnectionStringFromMaster(Guid tenantId)
     {
         const string sql = """
-            SELECT ConnectionSecretKey
+            SELECT DbServer, DbName, DbUser, DbPassword
             FROM Tenants
-            WHERE Codigo = @Codigo AND Status = 1
+            WHERE Id = @Id AND Status = 1
         """;
 
         using var connection = CreateMasterConnection();
 
-        var secretKey = connection.QueryFirstOrDefault<string>(sql, new { Codigo = tenantCode });
+        var tenantInfo = connection.QueryFirstOrDefault(sql, new { Id = tenantId });
 
-        if (string.IsNullOrWhiteSpace(secretKey))
+        if (tenantInfo == null)
             throw new UnauthorizedAccessException("Tenant inválido ou inativo.");
 
-        return secretProvider
-            .GetSecretAsync(secretKey)
-            .GetAwaiter()
-            .GetResult()
-            ?? throw new InvalidOperationException("Segredo não encontrado no vault.");
+        // Construct connection string
+        var builder = new SqlConnectionStringBuilder
+        {
+            DataSource = tenantInfo.DbServer,
+            InitialCatalog = tenantInfo.DbName,
+            UserID = tenantInfo.DbUser,
+            Password = System.Text.Encoding.UTF8.GetString((byte[])tenantInfo.DbPassword), // Assuming byte[] storage
+            TrustServerCertificate = true
+        };
+
+        return builder.ConnectionString;
     }
 }

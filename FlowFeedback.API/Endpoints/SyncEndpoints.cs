@@ -1,6 +1,8 @@
 ﻿using FlowFeedback.Application.DTOs;
 using FlowFeedback.Application.Events;
+using FlowFeedback.Application.Interfaces;
 using MassTransit;
+using Microsoft.AspNetCore.Mvc;
 
 namespace FlowFeedback.API.Endpoints;
 
@@ -11,19 +13,35 @@ public static class SyncEndpoints
         var group = app.MapGroup("api/sync")
             .WithTags("Sync");
 
-        group.MapPost("/votos", async (IPublishEndpoint publishEndpoint, PacoteVotosDto pacote) =>
+        group.MapPost("/votos", async (
+            [FromServices] IConfiguration config,
+            [FromServices] IServiceProvider serviceProvider,
+            [FromServices] IFeedbackService feedbackService,
+            [FromBody] PacoteVotosDto pacote) =>
         {
             if (pacote == null || pacote.Votos.Count == 0)
                 return Results.BadRequest("Pacote inválido ou vazio.");
 
-            var evento = new PacoteVotosRecebidoEvent
+            var useQueue = config.GetValue<bool>("Messaging:UseQueue");
+
+            if (useQueue)
             {
-                Dados = pacote
-            };
+                var publishEndpoint = serviceProvider.GetRequiredService<IPublishEndpoint>();
 
-            await publishEndpoint.Publish(evento);
+                var evento = new PacoteVotosRecebidoEvent
+                {
+                    Dados = pacote
+                };
 
-            return Results.Accepted();
+                await publishEndpoint.Publish(evento);
+                return Results.Accepted();
+            }
+            else
+            {
+                // Execução direta
+                await feedbackService.ProcessarPacoteVotos(pacote);
+                return Results.Ok(new { Message = "Processado diretamente com sucesso." });
+            }
         })
         .Produces(StatusCodes.Status202Accepted)
         .Produces(StatusCodes.Status400BadRequest);

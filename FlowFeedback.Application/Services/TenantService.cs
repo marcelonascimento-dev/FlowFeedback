@@ -10,12 +10,12 @@ namespace FlowFeedback.Application.Services;
 
 public sealed class TenantService(ITenantRepository tenantRepository) : ITenantService
 {
-    public async Task<(Guid, long, DateTime)> CadastrarTenantAsync(TenantCreateDto dto)
+    public async Task<(Guid, DateTime)> CadastrarTenantAsync(TenantCreateDto dto)
     {
         if (dto is null)
             throw new ArgumentNullException(nameof(dto));
 
-        if (string.IsNullOrWhiteSpace(dto.Nome))
+        if (string.IsNullOrWhiteSpace(dto.Name))
             throw new ArgumentException("Nome do tenant é obrigatório.");
 
         if (string.IsNullOrWhiteSpace(dto.Slug))
@@ -24,16 +24,18 @@ public sealed class TenantService(ITenantRepository tenantRepository) : ITenantS
         var tenant = new Tenant
         {
             Id = Guid.NewGuid(),
-            Nome = dto.Nome.Trim(),
+            Name = dto.Name.Trim(),
             Slug = dto.Slug.Trim().ToLowerInvariant(),
             Status = EnumStatusCadastro.Ativo,
-            TipoAmbiente = dto.TipoAmbiente,
-            ConnectionSecretKey = dto.ConnectionSecretKey
+            DbServer = dto.DbServer,
+            DbName = dto.DbName,
+            DbUser = dto.DbUser,
+            DbPassword = System.Text.Encoding.UTF8.GetBytes(dto.DbPassword) // Converting string to byte[]
         };
 
         var result = await tenantRepository.CadastrarTenantAsync(tenant);
 
-        return (result.Id, result.Codigo, result.DataCriacao);
+        return (result.Id, result.CreatedAt);
     }
 
     public async Task<TenantResponseDto> GetTenantAsync(Guid tenantId)
@@ -62,27 +64,15 @@ public sealed class TenantService(ITenantRepository tenantRepository) : ITenantS
         return MapToDto(tenant);
     }
 
-    public async Task<TenantResponseDto> GetTenantAsync(long codigo)
-    {
-        if (codigo <= 0)
-            throw new ArgumentException("Código do tenant inválido.");
-
-        var tenant = await tenantRepository.GetTenantAsync(codigo);
-
-        return tenant is null ? throw new KeyNotFoundException("Tenant não encontrado.") : MapToDto(tenant);
-    }
-
     private static TenantResponseDto MapToDto(Tenant tenant)
     {
         return new TenantResponseDto
         {
             Id = tenant.Id,
-            Codigo = tenant.Codigo,
-            Nome = tenant.Nome,
+            Name = tenant.Name,
             Slug = tenant.Slug,
             Status = tenant.Status,
-            TipoAmbiente = tenant.TipoAmbiente,
-            DataCriacao = tenant.DataCriacao
+            CreatedAt = tenant.CreatedAt
         };
     }
 }

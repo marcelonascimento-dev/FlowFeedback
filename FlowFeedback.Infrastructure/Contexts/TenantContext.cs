@@ -5,18 +5,26 @@ namespace FlowFeedback.Infrastructure.Contexts;
 
 public class TenantContext(IHttpContextAccessor accessor) : ITenantContext
 {
-    public int TenantCode
+    public Guid TenantId
     {
         get
         {
-            var claimValue = accessor.HttpContext?.User?.FindFirst("TenantCode")?.Value;
+            var user = accessor.HttpContext?.User;
+            var claimValue = user?.FindFirst("TenantId")?.Value;
 
-            if (int.TryParse(claimValue, out var tenantCode))
+            if (Guid.TryParse(claimValue, out var tenantId))
             {
-                return tenantCode;
+                return tenantId;
             }
 
-            return 0;
+            // Fallback to Header (useful for HybridAuthMiddleware)
+            var headerValue = accessor.HttpContext?.Request.Headers["X-Tenant-Id"].ToString();
+            if (Guid.TryParse(headerValue, out var headerTenantId))
+            {
+                return headerTenantId;
+            }
+
+            return Guid.Empty;
         }
     }
 }

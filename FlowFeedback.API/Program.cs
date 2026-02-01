@@ -71,9 +71,9 @@ builder.Services.AddScoped<IVotoRepository, VotoRepository>();
 builder.Services.AddScoped<ICadastroRepository, CadastroRepository>();
 builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
 builder.Services.AddScoped<IDeviceMasterRepository, DeviceMasterRepository>();
-builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ITenantRepository, TenantRepository>();
-builder.Services.AddScoped<ITenantUserIndexRepository, TenantUserIndexRepository>();
+builder.Services.AddScoped<IUserTenantRepository, UserTenantRepository>();
 
 
 // ==========================
@@ -90,12 +90,35 @@ builder.Services.AddScoped<IDispositivoRepository>(provider =>
 
 
 // ==========================
+// MASS TRANSIT / RABBITMQ
+// ==========================
+
+var useQueue = builder.Configuration.GetValue<bool>("Messaging:UseQueue");
+
+if (useQueue)
+{
+    builder.Services.AddMassTransit(x =>
+    {
+        x.AddConsumer<ProcessarVotosConsumer>();
+
+        x.UsingRabbitMq((context, cfg) =>
+        {
+            cfg.Host(builder.Configuration.GetConnectionString("RabbitMq"));
+
+            cfg.ConfigureEndpoints(context);
+        });
+    });
+}
+
+// ==========================
 // APPLICATION SERVICES
 // ==========================
 
 builder.Services.AddScoped<IFeedbackService, FeedbackService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IDeviceService, DeviceService>();
+builder.Services.AddScoped<ITenantService, TenantService>();
+builder.Services.AddScoped<ISetupService, SetupService>();
 
 builder.Services.AddAuthentication(options =>
 {
@@ -110,7 +133,7 @@ builder.Services.AddAuthentication(options =>
     {
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(key),
-        ValidateIssuer = false, 
+        ValidateIssuer = false,
         ValidateAudience = false
     };
 });
@@ -148,5 +171,6 @@ app.UseMiddleware<HybridAuthMiddleware>();
 app.MapAuthEndpoints();
 app.MapCadastroEndpoints();
 app.MapSyncEndpoints();
+app.MapSetupEndpoints();
 
 app.Run();

@@ -12,24 +12,24 @@ public class DeviceMasterRepository(IDbConnectionFactory dbFactory) : IDeviceMas
         using var conn = dbFactory.CreateMasterConnection();
 
         return await conn.QueryFirstOrDefaultAsync<DeviceLicencaDto>(
-            @"SELECT TenantCode, HardwareSignature 
+            @"SELECT TenantId, HardwareSignature 
               FROM DispositivoKeys 
               WHERE ApiKeyHash = @Key AND Ativo = 1",
             new { Key = apiKeyHash });
     }
 
-    public async Task RegistrarNovoDispositivoAsync(int tenantCode, string nomeDispositivo, string keyHash)
+    public async Task RegistrarNovoDispositivoAsync(Guid tenantId, string nomeDispositivo, string keyHash)
     {
         using var conn = dbFactory.CreateMasterConnection();
 
         var sql = @"
-            INSERT INTO DispositivoKeys (ApiKeyHash, TenantCode, NomeDispositivo, Ativo)
-            VALUES (@Hash, @Tenant, @Nome, 1)";
+            INSERT INTO DispositivoKeys (ApiKeyHash, TenantId, NomeDispositivo, Ativo)
+            VALUES (@Hash, @TenantId, @Nome, 1)";
 
         await conn.ExecuteAsync(sql, new
         {
             Hash = keyHash,
-            Tenant = tenantCode,
+            TenantId = tenantId,
             Nome = nomeDispositivo
         });
     }

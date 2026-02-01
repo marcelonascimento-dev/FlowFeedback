@@ -9,6 +9,6 @@ namespace FlowFeedback.Domain.Interfaces
     {
         Task<DeviceLicencaDto?> ObterLicencaPorChaveAsync(string apiKeyHash);
         Task VincularHardwareAsync(string apiKeyHash, string hardwareSignature);
-        Task RegistrarNovoDispositivoAsync(int tenantCode, string nomeDispositivo, string keyHash);
+        Task RegistrarNovoDispositivoAsync(Guid tenantId, string nomeDispositivo, string keyHash);
     }
 }

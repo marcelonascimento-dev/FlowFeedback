@@ -4,30 +4,44 @@ IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Tenants')
 BEGIN
     CREATE TABLE Tenants (
         Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-        Codigo BIGINT IDENTITY(100,1) NOT NULL,
         Nome NVARCHAR(200) NOT NULL,
         Slug NVARCHAR(200) NOT NULL,
         Status INT NOT NULL DEFAULT 1,
-        TipoAmbiente INT NOT NULL DEFAULT 0,
-        ConnectionSecretKey NVARCHAR(MAX) NULL,
-        DataCriacao DATETIME DEFAULT GETUTCDATE()
+        DbServer NVARCHAR(200) NOT NULL,
+        DbName NVARCHAR(200) NOT NULL,
+        DbUser NVARCHAR(200) NOT NULL,
+        DbPassword VARBINARY(MAX) NOT NULL,
+        CreatedAt DATETIME DEFAULT GETUTCDATE()
     );
-    CREATE UNIQUE INDEX IX_Tenants_Codigo ON Tenants(Codigo);
-    CREATE INDEX IX_Tenants_Slug ON Tenants(Slug);
+    CREATE UNIQUE INDEX IX_Tenants_Slug ON Tenants(Slug);
 END
 
-IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Usuarios')
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Users')
 BEGIN
-    CREATE TABLE Usuarios (
+    CREATE TABLE Users (
         Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-        TenantCode BIGINT NULL,
-        Nome NVARCHAR(100) NOT NULL,
         Email NVARCHAR(150) UNIQUE NOT NULL,
-        SenhaHash NVARCHAR(255) NOT NULL,
-        Role NVARCHAR(50) DEFAULT 'User',
-        Ativo BIT DEFAULT 1,
-        DataCriacao DATETIME DEFAULT GETUTCDATE()
+        PasswordHash NVARCHAR(255) NOT NULL,
+        IsActive BIT DEFAULT 1,
+        EmailConfirmed BIT DEFAULT 0,
+        CreatedAt DATETIME DEFAULT GETUTCDATE()
     );
+    CREATE INDEX IX_Users_Email ON Users(Email);
+END
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'UserTenants')
+BEGIN
+    CREATE TABLE UserTenants (
+        Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+        UserId UNIQUEIDENTIFIER NOT NULL,
+        TenantId UNIQUEIDENTIFIER NOT NULL,
+        Role INT NOT NULL, -- EnumUserRole
+        IsActive BIT DEFAULT 1,
+        CONSTRAINT FK_UserTenants_Users FOREIGN KEY (UserId) REFERENCES Users(Id),
+        CONSTRAINT FK_UserTenants_Tenants FOREIGN KEY (TenantId) REFERENCES Tenants(Id)
+    );
+    CREATE INDEX IX_UserTenants_User ON UserTenants(UserId);
+    CREATE INDEX IX_UserTenants_Tenant ON UserTenants(TenantId);
 END
 
 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'DispositivoKeys')
@@ -35,22 +49,11 @@ BEGIN
     CREATE TABLE DispositivoKeys (
         Id INT IDENTITY(1,1) PRIMARY KEY,
         ApiKeyHash NVARCHAR(256) NOT NULL,
-        TenantCode BIGINT NOT NULL,
+        TenantId UNIQUEIDENTIFIER NOT NULL,
         NomeDispositivo NVARCHAR(100),
-        HardwareSignature NVARCHAR(255) NULL,
         Ativo BIT DEFAULT 1,
-        DataCriacao DATETIME DEFAULT GETUTCDATE()
-    CREATE INDEX IX_ApiKeyHash ON DispositivoKeys(ApiKeyHash);
-END
-
-IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'TenantUserIndex')
-BEGIN
-    CREATE TABLE TenantUserIndex (
-        Email NVARCHAR(150) NOT NULL PRIMARY KEY,
-        UserId UNIQUEIDENTIFIER NOT NULL,
-        TenantCodigo BIGINT NOT NULL,
-        Ativo BIT DEFAULT 1,
-        DataCriacao DATETIME DEFAULT GETUTCDATE()
+        DataCriacao DATETIME DEFAULT GETUTCDATE(),
+        CONSTRAINT FK_DispositivoKeys_Tenants FOREIGN KEY (TenantId) REFERENCES Tenants(Id)
     );
-    CREATE INDEX IX_TenantUserIndex_UserId ON TenantUserIndex(UserId);
+    CREATE INDEX IX_ApiKeyHash ON DispositivoKeys(ApiKeyHash);
 END

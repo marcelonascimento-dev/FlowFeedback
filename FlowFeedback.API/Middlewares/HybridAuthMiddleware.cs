@@ -49,7 +49,7 @@ public class HybridAuthMiddleware(RequestDelegate next)
             return;
         }
 
-        context.Request.Headers["X-Tenant-Code"] = licenca.TenantCode.ToString();
+        context.Request.Headers["X-Tenant-Id"] = licenca.TenantId.ToString();
         await next(context);
     }
 }

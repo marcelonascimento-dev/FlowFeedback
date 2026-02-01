@@ -7,13 +7,13 @@ namespace FlowFeedback.Application.Services;
 
 public class DeviceService(IDeviceMasterRepository deviceMasterRepository) : IDeviceService
 {
-    public async Task<string> RegistrarNovoDispositivoAsync(int tenantCode, string nomeDispositivo)
+    public async Task<string> RegistrarNovoDispositivoAsync(Guid tenantId, string nomeDispositivo)
     {
         var rawKey = "dev_" + GenerateRandomToken(32);
 
         var keyHash = ComputeSha256Hash(rawKey);
 
-        await deviceMasterRepository.RegistrarNovoDispositivoAsync(tenantCode, nomeDispositivo, keyHash);
+        await deviceMasterRepository.RegistrarNovoDispositivoAsync(tenantId, nomeDispositivo, keyHash);
 
         return rawKey;
     }

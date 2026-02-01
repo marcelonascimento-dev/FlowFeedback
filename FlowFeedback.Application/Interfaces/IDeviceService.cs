@@ -2,6 +2,6 @@
 {
     public interface IDeviceService
     {
-        Task<string> RegistrarNovoDispositivoAsync(int tenantCode, string nomeDispositivo);
+        Task<string> RegistrarNovoDispositivoAsync(Guid tenantId, string nomeDispositivo);
     }
 }
