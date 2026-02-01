@@ -1,16 +1,21 @@
 ﻿using System.Data;
+using System.Text;
 using Dapper;
 using FlowFeedback.Application.Interfaces;
 using FlowFeedback.Application.Interfaces.Security;
 using FlowFeedback.Infrastructure.Data;
+using FlowFeedback.Infrastructure.Security;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 
+namespace FlowFeedback.Infrastructure.Data;
+
 public sealed class DbConnectionFactory(
     IConfiguration configuration,
     IDistributedCache cache,
-    ITenantContext tenant) : IDbConnectionFactory
+    ITenantContext tenant,
+    ICryptoService cryptoService) : IDbConnectionFactory
 {
     private const string TenantCacheKeyPrefix = "tenant:connection:";
     private static readonly TimeSpan TenantCacheTtl = TimeSpan.FromMinutes(10);
@@ -65,7 +70,7 @@ public sealed class DbConnectionFactory(
             DataSource = tenantInfo.DbServer,
             InitialCatalog = tenantInfo.DbName,
             UserID = tenantInfo.DbUser,
-            Password = System.Text.Encoding.UTF8.GetString((byte[])tenantInfo.DbPassword), // Assuming byte[] storage
+            Password = cryptoService.Decrypt(Encoding.UTF8.GetString((byte[])tenantInfo.DbPassword)),
             TrustServerCertificate = true
         };
 

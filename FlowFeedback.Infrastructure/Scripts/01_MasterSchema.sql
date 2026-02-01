@@ -4,7 +4,7 @@ IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Tenants')
 BEGIN
     CREATE TABLE Tenants (
         Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-        Nome NVARCHAR(200) NOT NULL,
+        Name NVARCHAR(200) NOT NULL,
         Slug NVARCHAR(200) NOT NULL,
         Status INT NOT NULL DEFAULT 1,
         DbServer NVARCHAR(200) NOT NULL,
