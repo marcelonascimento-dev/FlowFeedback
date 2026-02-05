@@ -12,7 +12,7 @@ public class UserRepository(IDbConnectionFactory dbFactory) : IUserRepository
         using var conn = dbFactory.CreateMasterConnection();
 
         return await conn.QueryFirstOrDefaultAsync<User>(
-            @"SELECT Id, Email, PasswordHash, IsActive, EmailConfirmed, CreatedAt
+            @"SELECT Id, Name, Email, PasswordHash, IsActive, EmailConfirmed, CreatedAt
               FROM Users
               WHERE Email = @Email AND IsActive = 1",
             new { Email = email });
@@ -23,6 +23,7 @@ public class UserRepository(IDbConnectionFactory dbFactory) : IUserRepository
         const string sql = @"
             SELECT 
                 Id,
+                Name,
                 Email,
                 PasswordHash,
                 IsActive,
@@ -42,8 +43,8 @@ public class UserRepository(IDbConnectionFactory dbFactory) : IUserRepository
     public async Task<User> CadastrarAsync(User user)
     {
         const string sql = @"
-            INSERT INTO Users (Id, Email, PasswordHash, IsActive, EmailConfirmed, CreatedAt)
-            VALUES (@Id, @Email, @PasswordHash, @IsActive, @EmailConfirmed, @CreatedAt);
+            INSERT INTO Users (Id, Name, Email, PasswordHash, IsActive, EmailConfirmed, CreatedAt)
+            VALUES (@Id, @Name, @Email, @PasswordHash, @IsActive, @EmailConfirmed, @CreatedAt);
             SELECT * FROM Users WHERE Id = @Id;";
 
         using var db = dbFactory.CreateMasterConnection();

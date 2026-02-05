@@ -20,6 +20,7 @@ IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Users')
 BEGIN
     CREATE TABLE Users (
         Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+        Name NVARCHAR(200) NOT NULL,
         Email NVARCHAR(150) UNIQUE NOT NULL,
         PasswordHash NVARCHAR(255) NOT NULL,
         IsActive BIT DEFAULT 1,

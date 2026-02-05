@@ -9,7 +9,6 @@ public static class AuthEndpoints
     {
         var publicGroup = app.MapGroup("/api/auth");
 
-        // Correção aqui: IAuthService em vez de AuthService
         publicGroup.MapPost("/login", async (LoginRequest req, IAuthService service) =>
         {
             var token = await service.AutenticarAsync(req.Email, req.Senha);

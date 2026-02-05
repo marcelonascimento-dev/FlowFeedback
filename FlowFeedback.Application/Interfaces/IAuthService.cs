@@ -1,7 +1,9 @@
-﻿namespace FlowFeedback.Application.Interfaces;
+﻿using FlowFeedback.Application.Services;
+
+namespace FlowFeedback.Application.Interfaces;
 
 public interface IAuthService
 {
-    Task<string?> AutenticarAsync(string email, string senha);
+    Task<LoginResponse?> AutenticarAsync(string email, string senha);
     string HashSenha(string senha);
 }

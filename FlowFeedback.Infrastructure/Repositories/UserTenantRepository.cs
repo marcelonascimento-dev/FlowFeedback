@@ -9,34 +9,31 @@ public sealed class UserTenantRepository(IDbConnectionFactory connectionFactory)
 {
     public async Task<UserTenant?> GetByEmailAsync(string email)
     {
-        // This query joins Users and UserTenants to get context by email? 
-        // Or simply query UserTenants by UserId?
-        // The original query was on TenantUserIndex which had Email? 
-        // Wait, original TenantUserIndex table had UserId and TenantCode. The repo method `GetByEmailAsync` implies the table had Email or joined. 
-        // Original SQL: SELECT UserId, TenantCodigo, Ativo FROM TenantUserIndex WHERE Email = @Email
-        // If the new `UserTenants` table doesn't have Email, we need to join `Users`.
-        // However, the request didn't specify `Email` in `UserTenants`. 
-        // Let's assume we need to join or that the user passes UserId. 
-        // But the interface is GetByEmailAsync. 
-        // Let's UPDATE the query to join Users.
-
         const string sql = @"
             SELECT 
-                ut.Id,
-                ut.UserId,
-                ut.TenantId,
-                ut.Role,
-                ut.IsActive
+                ut.Id, ut.UserId, ut.TenantId, ut.Role, ut.IsActive,
+                u.Id, u.Name, u.Email, u.PasswordHash, u.IsActive,
+                t.Id, t.Name, t.Slug, t.DbServer, t.DbName, t.DbUser, t.DbPassword, t.Status, t.CreatedAt
             FROM UserTenants ut
             INNER JOIN Users u ON ut.UserId = u.Id
+            INNER JOIN Tenants t ON ut.TenantId = t.Id
             WHERE u.Email = @Email";
 
         using var db = connectionFactory.CreateMasterConnection();
 
-        return await db.QueryFirstOrDefaultAsync<UserTenant>(
+        var result = await db.QueryAsync<UserTenant, User, Tenant, UserTenant>(
             sql,
-            new { Email = email }
+            (userTenant, user, tenant) =>
+            {
+                userTenant.User = user;
+                userTenant.Tenant = tenant;
+                return userTenant;
+            },
+            new { Email = email },
+            splitOn: "Id,Id"
         );
+
+        return result.FirstOrDefault();
     }
 
     public async Task<IEnumerable<UserTenant>> GetByUserIdAsync(Guid userId)

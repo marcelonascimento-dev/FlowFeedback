@@ -9,5 +9,8 @@ namespace FlowFeedback.Domain.Entities
         public Guid TenantId { get; set; }
         public EnumUserRole Role { get; set; }
         public bool IsActive { get; set; }
+
+        public User? User { get; set; }
+        public Tenant? Tenant { get; set; }
     }
 }

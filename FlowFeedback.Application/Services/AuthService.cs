@@ -1,72 +1,81 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using System.Text;
+using FlowFeedback.Application.DTOs;
 using FlowFeedback.Application.Interfaces;
 using FlowFeedback.Domain.Entities;
 using FlowFeedback.Domain.Interfaces;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 
 namespace FlowFeedback.Application.Services;
 
 public sealed class AuthService(
     IUserTenantRepository userTenantRepository,
-    IUserRepository userRepository,
-    IConfiguration config) : IAuthService
+    IOptions<JwtSettings> jwtOptions) : IAuthService
 {
-    public async Task<string?> AutenticarAsync(string email, string senha)
+    private readonly JwtSettings _settings = jwtOptions.Value;
+
+    public async Task<LoginResponse?> AutenticarAsync(string email, string senha)
     {
-        // 1. Find UserTenant by Email (checks if user exists and is linked to a tenant)
-        // Note: usage of GetByEmailAsync implies 1:1 mapping or default tenant. 
         var userTenant = await userTenantRepository.GetByEmailAsync(email);
 
-        if (userTenant is null || !userTenant.IsActive)
+        if (userTenant?.User is null || userTenant.Tenant is null)
             return null;
 
-        // 2. Find User
-        var user = await userRepository.GetByIdAsync(userTenant.UserId);
-
-        if (user is null || !user.IsActive)
+        if (!userTenant.IsActive || !userTenant.User.IsActive)
             return null;
 
-        // 3. Verify Password
-        if (!BCrypt.Net.BCrypt.Verify(senha, user.PasswordHash))
+        if (!BCrypt.Net.BCrypt.Verify(senha, userTenant.User.PasswordHash))
             return null;
 
-        // 4. Generate Token
-        return GerarJwtToken(user, userTenant);
+        var token = GerarJwtToken(userTenant.User, userTenant);
+
+        var expiresInSeconds = (int)TimeSpan.FromHours(_settings.ExpirationHours).TotalSeconds;
+
+        return new LoginResponse(
+            AccessToken: token,
+            ExpiresIn: expiresInSeconds,
+            User: new UserResponse(userTenant.User.Id, userTenant.User.Name, userTenant.User.Email, userTenant.Role.ToString()),
+            Tenant: new TenantResponse(userTenant.TenantId, userTenant.Tenant.Slug)
+        );
     }
 
     private string GerarJwtToken(User user, UserTenant userTenant)
     {
-        var keyString = config["Jwt:Key"]
-            ?? throw new InvalidOperationException("Jwt:Key não configurada.");
-
-        var key = Encoding.ASCII.GetBytes(keyString);
-
-        var claims = new List<Claim>
-        {
-            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new(ClaimTypes.Email, user.Email),
-            new(ClaimTypes.Role, userTenant.Role.ToString()), // Use Enum.ToString()
-            new("TenantId", userTenant.TenantId.ToString()) // TenantId Guid
-        };
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.SecretKey));
+        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
         var tokenDescriptor = new SecurityTokenDescriptor
         {
-            Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.AddHours(8),
-            SigningCredentials = new SigningCredentials(
-                new SymmetricSecurityKey(key),
-                SecurityAlgorithms.HmacSha256Signature)
+            Subject = new ClaimsIdentity(
+            [
+                new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new(JwtRegisteredClaimNames.Email, user.Email),
+                new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new("tenant_id", userTenant.TenantId.ToString()),
+                new(ClaimTypes.Role, userTenant.Role.ToString())
+            ]),
+            Expires = DateTime.UtcNow.AddHours(_settings.ExpirationHours),
+            SigningCredentials = credentials,
+            Issuer = _settings.Issuer,
+            Audience = _settings.Audience
         };
 
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var token = tokenHandler.CreateToken(tokenDescriptor);
-
-        return tokenHandler.WriteToken(token);
+        var handler = new JsonWebTokenHandler();
+        return handler.CreateToken(tokenDescriptor);
     }
 
     public string HashSenha(string senha)
         => BCrypt.Net.BCrypt.HashPassword(senha);
 }
+
+public record LoginResponse(
+    string AccessToken,
+    int ExpiresIn,
+    UserResponse User,
+    TenantResponse Tenant,
+    string TokenType = "Bearer");
+
+public record UserResponse(Guid Id, string Name, string Email, string Role);
+public record TenantResponse(Guid Id, string Slug);
