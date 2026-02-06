@@ -15,6 +15,19 @@ public sealed class AuthService(
     IOptions<JwtSettings> jwtOptions) : IAuthService
 {
     private readonly JwtSettings _settings = jwtOptions.Value;
+    private readonly byte[] _key = InitializeKey(jwtOptions.Value.SecretKey);
+
+    private static byte[] InitializeKey(string secretKey)
+    {
+        try
+        {
+            return Convert.FromBase64String(secretKey);
+        }
+        catch
+        {
+            return Encoding.UTF8.GetBytes(secretKey);
+        }
+    }
 
     public async Task<LoginResponse?> AutenticarAsync(string email, string senha)
     {
@@ -43,7 +56,7 @@ public sealed class AuthService(
 
     private string GerarJwtToken(User user, UserTenant userTenant)
     {
-        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.SecretKey));
+        var securityKey = new SymmetricSecurityKey(_key);
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
         var tokenDescriptor = new SecurityTokenDescriptor
@@ -57,6 +70,7 @@ public sealed class AuthService(
                 new(ClaimTypes.Role, userTenant.Role.ToString())
             ]),
             Expires = DateTime.UtcNow.AddHours(_settings.ExpirationHours),
+            NotBefore = DateTime.UtcNow.AddMinutes(-5), // Garante validade imediata
             SigningCredentials = credentials,
             Issuer = _settings.Issuer,
             Audience = _settings.Audience

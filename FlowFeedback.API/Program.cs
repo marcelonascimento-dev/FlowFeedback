@@ -1,4 +1,3 @@
-using System.Text;
 using FlowFeedback.API.Consumers;
 using FlowFeedback.API.Endpoints;
 using FlowFeedback.API.Middlewares;
@@ -13,15 +12,46 @@ using FlowFeedback.Infrastructure.Repositories;
 using FlowFeedback.Infrastructure.Security;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer((document, context, cancellationToken) =>
+    {
+        var scheme = new OpenApiSecurityScheme
+        {
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+            In = ParameterLocation.Header,
+            Description = "Insira o token JWT: Bearer {token}"
+        };
+
+        document.Components ??= new OpenApiComponents();
+        if (document.Components.SecuritySchemes == null)
+        {
+            document.Components.SecuritySchemes = new Dictionary<string, IOpenApiSecurityScheme>();
+        }
+        document.Components.SecuritySchemes["Bearer"] = scheme;
+
+        if (document.Security == null)
+        {
+            document.Security = new List<OpenApiSecurityRequirement>();
+        }
+        document.Security.Add(new OpenApiSecurityRequirement
+        {
+            [new OpenApiSecuritySchemeReference("Bearer")] = []
+        });
+
+        return Task.CompletedTask;
+    });
+});
 
 
 // ==========================
@@ -60,8 +90,6 @@ var masterKey = builder.Configuration["Crypto:MasterKey"]
     ?? throw new InvalidOperationException("Crypto:MasterKey não configurada.");
 
 builder.Services.AddSingleton<ICryptoService>(_ => new CryptoService(masterKey));
-
-// Vault / Secrets → Scoped
 builder.Services.AddScoped<ISecretProvider, AzureKeyVaultSecretProvider>();
 
 
@@ -121,12 +149,15 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IDeviceService, DeviceService>();
 builder.Services.AddScoped<ITenantService, TenantService>();
 builder.Services.AddScoped<ISetupService, SetupService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 var jwtSettingsSection = builder.Configuration.GetSection("JwtSettings");
 builder.Services.Configure<JwtSettings>(jwtSettingsSection);
 
-var jwtSettings = jwtSettingsSection.Get<JwtSettings>();
-var key = Encoding.ASCII.GetBytes(jwtSettings.SecretKey);
+var jwtSettings = jwtSettingsSection.Get<JwtSettings>()
+    ?? throw new InvalidOperationException("JwtSettings não configurada.");
+
+byte[] key = Convert.FromBase64String(jwtSettings.SecretKey);
 
 builder.Services.AddAuthentication(options =>
 {
@@ -137,6 +168,9 @@ builder.Services.AddAuthentication(options =>
 {
     options.RequireHttpsMetadata = false;
     options.SaveToken = true;
+    options.IncludeErrorDetails = true;
+    options.MapInboundClaims = false;
+
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuerSigningKey = true,
@@ -146,9 +180,11 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidAudience = jwtSettings.Audience,
         ValidateLifetime = true,
-        ClockSkew = TimeSpan.Zero
+        ClockSkew = TimeSpan.FromMinutes(30)
     };
 });
+
+builder.Services.AddAuthorization();
 
 
 // ==========================
@@ -168,12 +204,15 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
-
-app.UseMiddleware<TenantIdentifierMiddleware>();
 app.UseAuthentication();
 app.UseMiddleware<HybridAuthMiddleware>();
+app.UseMiddleware<TenantIdentifierMiddleware>();
+app.UseAuthorization();
 
 
 // ==========================
@@ -184,5 +223,6 @@ app.MapAuthEndpoints();
 app.MapCadastroEndpoints();
 app.MapSyncEndpoints();
 app.MapSetupEndpoints();
+app.MapUserEndpoints();
 
 app.Run();

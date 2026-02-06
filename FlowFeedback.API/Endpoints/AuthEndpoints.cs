@@ -11,9 +11,21 @@ public static class AuthEndpoints
 
         publicGroup.MapPost("/login", async (LoginRequest req, IAuthService service) =>
         {
-            var token = await service.AutenticarAsync(req.Email, req.Senha);
-            return token is null ? Results.Unauthorized() : Results.Ok(new { Token = token });
+            var response = await service.AutenticarAsync(req.Email, req.Senha);
+            return response is null ? Results.Unauthorized() : Results.Ok(response);
         });
+
+        publicGroup.MapGet("/me", (HttpContext http) =>
+        {
+            var user = http.User;
+            return Results.Ok(new
+            {
+                UserId = user.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value,
+                Email = user.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Email)?.Value,
+                TenantId = user.FindFirst("tenant_id")?.Value,
+                Role = user.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value
+            });
+        }).RequireAuthorization();
 
         var adminGroup = app.MapGroup("/api/admin/devices")
                             .RequireAuthorization();
@@ -23,7 +35,7 @@ public static class AuthEndpoints
             IDeviceService deviceService,
             HttpContext http) =>
         {
-            var tenantClaim = http.User.FindFirst("TenantId")?.Value;
+            var tenantClaim = http.User.FindFirst("tenant_id")?.Value;
 
             if (!Guid.TryParse(tenantClaim, out Guid tenantId))
                 return Results.Forbid();

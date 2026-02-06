@@ -40,20 +40,56 @@ public sealed class UserTenantRepository(IDbConnectionFactory connectionFactory)
     {
         const string sql = @"
             SELECT 
-                Id,
-                UserId,
-                TenantId,
-                Role,
-                IsActive
-            FROM UserTenants
-            WHERE UserId = @UserId";
+                ut.Id, ut.UserId, ut.TenantId, ut.Role, ut.IsActive,
+                u.Id, u.Name, u.Email, u.PasswordHash, u.IsActive,
+                t.Id, t.Name, t.Slug, t.DbServer, t.DbName, t.DbUser, t.DbPassword, t.Status, t.CreatedAt
+            FROM UserTenants ut
+            INNER JOIN Users u ON ut.UserId = u.Id
+            INNER JOIN Tenants t ON ut.TenantId = t.Id
+            WHERE ut.UserId = @UserId";
 
         using var db = connectionFactory.CreateMasterConnection();
 
-        return await db.QueryAsync<UserTenant>(
-           sql,
-           new { UserId = userId }
-       );
+        return await db.QueryAsync<UserTenant, User, Tenant, UserTenant>(
+            sql,
+            (userTenant, user, tenant) =>
+            {
+                userTenant.User = user;
+                userTenant.Tenant = tenant;
+                return userTenant;
+            },
+            new { UserId = userId },
+            splitOn: "Id,Id"
+        );
+    }
+
+    public async Task<UserTenant?> GetByIdsAsync(Guid userId, Guid tenantId)
+    {
+        const string sql = @"
+            SELECT 
+                ut.Id, ut.UserId, ut.TenantId, ut.Role, ut.IsActive,
+                u.Id, u.Name, u.Email, u.PasswordHash, u.IsActive,
+                t.Id, t.Name, t.Slug, t.DbServer, t.DbName, t.DbUser, t.DbPassword, t.Status, t.CreatedAt
+            FROM UserTenants ut
+            INNER JOIN Users u ON ut.UserId = u.Id
+            INNER JOIN Tenants t ON ut.TenantId = t.Id
+            WHERE ut.UserId = @UserId AND ut.TenantId = @TenantId";
+
+        using var db = connectionFactory.CreateMasterConnection();
+
+        var result = await db.QueryAsync<UserTenant, User, Tenant, UserTenant>(
+            sql,
+            (userTenant, user, tenant) =>
+            {
+                userTenant.User = user;
+                userTenant.Tenant = tenant;
+                return userTenant;
+            },
+            new { UserId = userId, TenantId = tenantId },
+            splitOn: "Id,Id"
+        );
+
+        return result.FirstOrDefault();
     }
 
     public async Task<UserTenant> CadastrarAsync(UserTenant userTenant)

@@ -44,6 +44,7 @@ public sealed class SetupService(
         var user = new User
         {
             Id = Guid.NewGuid(),
+            Name = "Administrator",
             Email = email.Trim().ToLowerInvariant(),
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
             IsActive = true,

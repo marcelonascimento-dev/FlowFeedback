@@ -50,4 +50,33 @@ public class UserRepository(IDbConnectionFactory dbFactory) : IUserRepository
         using var db = dbFactory.CreateMasterConnection();
         return await db.QuerySingleAsync<User>(sql, user);
     }
+
+    public async Task<IEnumerable<User>> GetAllAsync()
+    {
+        const string sql = "SELECT Id, Name, Email, PasswordHash, IsActive, EmailConfirmed, CreatedAt FROM Users";
+        using var db = dbFactory.CreateMasterConnection();
+        return await db.QueryAsync<User>(sql);
+    }
+
+    public async Task UpdateAsync(User user)
+    {
+        const string sql = @"
+            UPDATE Users 
+            SET Name = @Name, 
+                Email = @Email, 
+                PasswordHash = @PasswordHash, 
+                IsActive = @IsActive, 
+                EmailConfirmed = @EmailConfirmed
+            WHERE Id = @Id";
+
+        using var db = dbFactory.CreateMasterConnection();
+        await db.ExecuteAsync(sql, user);
+    }
+
+    public async Task DeleteAsync(Guid id)
+    {
+        const string sql = "DELETE FROM Users WHERE Id = @Id";
+        using var db = dbFactory.CreateMasterConnection();
+        await db.ExecuteAsync(sql, new { Id = id });
+    }
 }

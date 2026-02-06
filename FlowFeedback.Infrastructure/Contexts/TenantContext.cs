@@ -10,7 +10,7 @@ public class TenantContext(IHttpContextAccessor accessor) : ITenantContext
         get
         {
             var user = accessor.HttpContext?.User;
-            var claimValue = user?.FindFirst("TenantId")?.Value;
+            var claimValue = user?.FindFirst("tenant_id")?.Value;
 
             if (Guid.TryParse(claimValue, out var tenantId))
             {
