@@ -98,12 +98,13 @@ builder.Services.AddScoped<ISecretProvider, AzureKeyVaultSecretProvider>();
 // ==========================
 
 builder.Services.AddScoped<IVotoRepository, VotoRepository>();
-builder.Services.AddScoped<ICadastroRepository, CadastroRepository>();
+builder.Services.AddScoped<IAlvoAvaliacaoRepository, AlvoAvaliacaoRepository>();
 builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
 builder.Services.AddScoped<IDeviceMasterRepository, DeviceMasterRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ITenantRepository, TenantRepository>();
 builder.Services.AddScoped<IUserTenantRepository, UserTenantRepository>();
+builder.Services.AddScoped<IEmpresaRepository, EmpresaRepository>();
 
 
 // ==========================
@@ -150,6 +151,7 @@ builder.Services.AddScoped<IDeviceService, DeviceService>();
 builder.Services.AddScoped<ITenantService, TenantService>();
 builder.Services.AddScoped<ISetupService, SetupService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IEmpresaService, EmpresaService>();
 
 var jwtSettingsSection = builder.Configuration.GetSection("JwtSettings");
 builder.Services.Configure<JwtSettings>(jwtSettingsSection);
@@ -220,9 +222,9 @@ app.UseAuthorization();
 // ==========================
 
 app.MapAuthEndpoints();
-app.MapCadastroEndpoints();
 app.MapSyncEndpoints();
 app.MapSetupEndpoints();
 app.MapUserEndpoints();
+app.MapEmpresaEndpoints();
 
 app.Run();

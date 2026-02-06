@@ -10,9 +10,6 @@ public class Dispositivo
     public Guid EmpresaId { get; set; }
 
     [Required]
-    public Guid TenantId { get; set; }
-
-    [Required]
     [MaxLength(100)]
     public string Nome { get; set; }
 

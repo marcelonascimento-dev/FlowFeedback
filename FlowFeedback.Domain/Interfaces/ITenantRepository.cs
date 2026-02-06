@@ -7,5 +7,6 @@ namespace FlowFeedback.Domain.Interfaces
         Task<Tenant> CadastrarTenantAsync(Tenant tenant);
         Task<Tenant?> GetTenantAsync(Guid tenantId);
         Task<Tenant?> GetTenantAsync(string slug);
+        Task<bool> CriarSchemaTenantAsync(Guid tenantId);
     }
 }

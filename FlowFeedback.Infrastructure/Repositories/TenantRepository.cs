@@ -92,6 +92,28 @@ namespace FlowFeedback.Infrastructure.Repositories
                 new { Slug = slug }
             );
         }
+        public async Task<bool> CriarSchemaTenantAsync(Guid tenantId)
+        {
+            var schemaName = $"tenant_{tenantId:N}";
+            using var masterConn = dbConnectionFactory.CreateMasterConnection();
 
+            // Create the database
+            await masterConn.ExecuteAsync($"CREATE DATABASE [{schemaName}]");
+
+            // Connect to the new database to run the schema script
+            // This assumes the DbConnectionFactory can handle dynamic connection strings or we build it here.
+            // For now, let's stick to the logic from CadastroRepository but improved to target the new DB.
+
+            var builder = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(masterConn.ConnectionString)
+            {
+                InitialCatalog = schemaName
+            };
+
+            using var tenantConn = new Microsoft.Data.SqlClient.SqlConnection(builder.ConnectionString);
+            var scriptTabelas = ScriptProvider.GetTenantSchemaScript();
+
+            await tenantConn.ExecuteAsync(scriptTabelas);
+            return true;
+        }
     }
 }

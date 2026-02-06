@@ -6,7 +6,6 @@ public class AlvoAvaliacao
 {
     public Guid Id { get; set; }
     public Guid EmpresaId { get; set; }
-    public Guid TenantId { get; set; }
 
     public string Nome { get; set; }
     public string? Subtitulo { get; set; }
